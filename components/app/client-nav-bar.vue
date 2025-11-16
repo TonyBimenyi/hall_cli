@@ -62,12 +62,12 @@ export default {
   position: fixed;
   top: 0;
   width: 100%;
-  padding: 15px 0;
+  padding: 23px 0;
   z-index: 50;
 
   display: flex;
   backdrop-filter: blur(0px);
-  background: transparent;
+  background: white;
 
   transition: backdrop-filter 0.3s ease, background-color 0.3s ease;
 }
