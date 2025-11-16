@@ -5,6 +5,18 @@
   font-family: "Ubuntu", sans-serif;
 }
 
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 :root {
   /* Colors */
   --primary-color: #001745;
