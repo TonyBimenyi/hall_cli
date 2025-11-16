@@ -99,6 +99,7 @@
 .btn-dark {
   background: #001b4d;
   color: #fff;
+  border: 2px solid white;
 }
 
 .btn-light {
