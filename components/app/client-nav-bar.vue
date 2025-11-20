@@ -18,7 +18,7 @@
         </ul>
       </div>
 
-      <NuxtLink to="/login" class="btn-signin">Sign In</NuxtLink>
+      <NuxtLink to="/#" class="btn-signin">Sign In</NuxtLink>
     </nav>
   </header>
 </template>
@@ -66,6 +66,7 @@ export default {
   z-index: 50;
 
   display: flex;
+  justify-content: center;
   backdrop-filter: blur(0px);
   background: white;
 
@@ -83,8 +84,8 @@ nav.container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 90%;
-  margin: auto;
+  width: 100%;
+  /* margin: auto; */
 }
 
 .left {

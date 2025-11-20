@@ -59,10 +59,11 @@ export default {
 /* FLEX LAYOUT */
 .features-flex {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
   cursor: pointer;
+  width: 100%;
 }
 
 /* Card */
