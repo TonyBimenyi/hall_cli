@@ -1,5 +1,6 @@
 <template>
     <div class="about_cont">
+        <ReusablePageHeader/>
         <AboutStory/>
         <AboutFeatures/>
         <AboutTeam/>

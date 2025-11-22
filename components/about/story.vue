@@ -3,7 +3,7 @@
         <div class="title">
             <h1>Our Story</h1>
         </div>
-        <div class="story-descr">
+        <div class="story-descr fade-up" ref="story">
             <p>Founded in 2013, Elite Reception & Conference Hall has become the premier destination for exceptional events in the city. What started as a dream to create a space where memories are made has grown into a beloved venue trusted by hundreds of clients each year.
 
 Our 25,000 square foot facility combines classic elegance with modern amenities, providing the perfect backdrop for weddings, corporate conferences, seminars, anniversary celebrations, and special occasions of all kinds.
@@ -12,10 +12,23 @@ We pride ourselves on attention to detail, personalized service, and our commitm
         </div>
     </div>
 </template>
+<script>
+
+
+export default {
+  mounted() {
+    const { animateOnScroll } = useScrollAnimation()
+
+    // Your composable expects an array of elements
+    animateOnScroll([this.$refs.story])
+  }
+}
+</script>
 <style scopped>
     .about-container {
         text-align: center;
         margin-bottom: 90px;
+        margin-top: 50px;
     }
     .about-container .title{
         font-size: var(--fs-xl);
