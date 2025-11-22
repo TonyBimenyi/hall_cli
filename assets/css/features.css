@@ -1,0 +1,81 @@
+.section-title {
+  font-family: var(--font-secondary);
+  font-size: 2.5rem;
+  margin-bottom: 60px;
+  color: #0a1f44;
+}
+
+/* FLEX LAYOUT */
+.features-flex {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* Card */
+.feature-card {
+  background: #ffffff;
+  padding: 40px 30px;
+  border-radius: 18px;
+  width: 300px;
+  border: 2px solid #ecf2fb;
+  box-shadow: 0 10px 25px rgba(0, 30, 90, 0.04);
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 30px rgba(0, 30, 90, 0.08);
+}
+
+.icon-circle {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #0a1f44;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.feature-title {
+  font-family: var(--font-secondary);
+  font-size: 1.4rem;
+  color: #0a1f44;
+  margin-bottom: 10px;
+}
+
+.feature-text {
+  font-family: var(--font-primary);
+  color: #6b7a90;
+  line-height: 1.5;
+  font-size: 1rem;
+}
+
+/* FADE IN UP ANIMATION */
+.fade-up {
+  opacity: 0;
+  transform: translateY(35px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+  animation: fadeInUp 1.2s ease forwards;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(35px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
