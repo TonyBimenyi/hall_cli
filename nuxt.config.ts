@@ -8,7 +8,8 @@ export default defineNuxtConfig({
     '../assets/css/components.css',
   ],
     plugins:[
-    '../plugins/iconify.js' // register iconify globally
+    '../plugins/iconify.js', // register iconify globally
+    '../plugins/datepicker.client.js'  // ← add this line
   ],
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true }
