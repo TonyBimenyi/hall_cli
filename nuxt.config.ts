@@ -4,7 +4,8 @@ export default defineNuxtConfig({
     assets:"/<rootDir>/assets",
   },
   css:[
-    '../assets/css/main.css'
+    '../assets/css/main.css',
+    '../assets/css/components.css',
   ],
     plugins:[
     '../plugins/iconify.js' // register iconify globally

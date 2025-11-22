@@ -15,7 +15,7 @@ We pride ourselves on attention to detail, personalized service, and our commitm
 <style scopped>
     .about-container {
         text-align: center;
-
+        margin-bottom: 90px;
     }
     .about-container .title{
         font-size: var(--fs-xl);
