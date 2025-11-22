@@ -3,5 +3,6 @@
         <HomeHero/>
         <HomeFeatures/>
         <HomeAvailability/>
+        <HomeCta/>
     </div>
 </template>

@@ -2,7 +2,7 @@
   <section class="features-section">
     <h2 class="section-title">Check Availability</h2>
 
-    <div class="features-flex">
+    <div class="features-flex " >
       <div class="feature-card fade-up" ref="cards">
         <p class="feature-text">
           Find the perfect date for your event. Our booking calendar shows real-time availability.
