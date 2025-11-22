@@ -40,6 +40,7 @@ export default {
   font-size: 2.5rem;
   margin-bottom: 40px;
   color: #0a1f44;
+  font-family: var(--font-secondary);
 }
 .feature-card button{
     background: var(--primary-color);
