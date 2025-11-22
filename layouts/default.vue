@@ -5,5 +5,7 @@
      <main>
       <slot />
     </main>
-
+<div>
+    <AppClientFooter />
+  </div>
 </template>
