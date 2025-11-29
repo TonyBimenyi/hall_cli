@@ -2,6 +2,8 @@
     <div class="about_cont">
         <ReusablePageHeader/>
         <ServicesPackages/>
+        <HomeCta/>
+        <ServicesServicelist/>
     </div>
 </template>
 <style scopped>
