@@ -93,6 +93,11 @@
           </select>
         </div>
 
+        <!-- PRICES -->
+           <div class="prices">
+              <p><strong>Total avec les jours: </strong> 2300 Fbu</p> 
+           </div>
+
       </div>
 
       <!-- RIGHT PANEL -->
@@ -295,12 +300,26 @@ export default {
   /* width: 100%; */
   /* min-height: 100vh; */
 }
+.calendar-header button{
+  background: var(--accent-color);
+  padding: 5px 12px;
+  border-radius: 5px;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
 .left-panel, .right-panel{
     background: #fff;
     padding: 28px;
     border-radius: 18px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.08);
     width: 90%;
+}
+.selected-labels{
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
 }
 
 .card {
@@ -386,11 +405,21 @@ export default {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 6px;
+  margin-bottom: 20px;
+}
+.clear-btn{
+  background: var(--accent-color);
+  padding: 8px 14px;
+  /* border: 2px solid var(--primary-color); */
+  border: none;
+  border-radius: 5px;
+  color: white;
+  margin-bottom: 10px;
 }
 
 .day-cell {
   padding: 8px;
-  min-height: 46px;
+  /* min-height: 46px; */
   border-radius: 8px;
   text-align: right;
   cursor: pointer;
@@ -429,7 +458,8 @@ export default {
 /* selection */
 .selected-start .day-number,
 .selected-end .day-number {
-  background: linear-gradient(90deg,#3751ff,#0b6bff);
+  background: var(--primary-color);
+  border-radius: 5px;
   color: white;
   font-weight: 700;
 }
