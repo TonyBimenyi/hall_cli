@@ -2,7 +2,7 @@
   <section class="packages-section">
     <h2 class="section-title">Our Packages</h2>
 
-    <div class="packages-grid">
+    <div class="packages-grid fade-up" ref="pack" >
 
       <!-- Basic Conference -->
       <div class="card">
@@ -70,7 +70,16 @@
   </section>
 </template>
 
-<script setup>
+<script>
+export default {
+  // name: "CTASection",
+  mounted() {
+    const { animateOnScroll } = useScrollAnimation()
+
+    // Add the fade-up animation to the CTA section
+    animateOnScroll([this.$refs.pack])
+  }
+};
 </script>
 
 <style scoped>

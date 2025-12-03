@@ -2,7 +2,7 @@
   <section class="perfect-for-section">
     <h2 class="section-title">Perfect For</h2>
 
-    <div class="perfect-grid">
+    <div class="perfect-grid ">
       <div
         v-for="(item, index) in items"
         :key="index"
