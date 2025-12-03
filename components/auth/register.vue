@@ -1,0 +1,110 @@
+<template>
+  <div class="auth-container">
+    <div class="auth-card">
+
+      <h1>Create Account</h1>
+      <p class="subtitle">Join us and get started</p>
+
+      <label>Full Name</label>
+      <input type="text" placeholder="John Doe" />
+
+      <label>Email</label>
+      <input type="email" placeholder="you@example.com" />
+
+      <label>Password</label>
+      <input type="password" placeholder="••••••••" />
+
+      <label>Confirm Password</label>
+      <input type="password" placeholder="••••••••" />
+
+      <button class="submit-btn">Sign Up</button>
+
+      <p class="switch-text">
+        Already have an account?
+        <a href="/login">Sign in</a>
+      </p>
+
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "RegisterView",
+};
+</script>
+
+<style scoped>
+/* same styles as login */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f9fafc;
+}
+
+.auth-card {
+  background: #fff;
+  width: 420px;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+}
+
+.auth-card h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #061b49;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: #7a869a;
+  margin-bottom: 25px;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+input {
+  width: 93%;
+  padding: 12px;
+  border: 1px solid #d5d9e1;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: #061b49;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  margin-top: 25px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background: #0a2b6a;
+}
+
+.switch-text {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 14px;
+}
+
+.switch-text a {
+  color: #0a2b6a;
+  font-weight: 600;
+  text-decoration: underline;
+}
+</style>
