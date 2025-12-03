@@ -1,5 +1,5 @@
 <template>
-  <div class="contact-container fade-up" ref="form">
+  <div class="contact-container">
 
     <!-- LEFT FORM -->
     <div class="contact-form">
@@ -71,11 +71,7 @@
 <script>
 export default {
   name: "ContactPage",
-    mounted() {
-    // Call the composable inside mounted
-    const { animateOnScroll } = useScrollAnimation()
-    animateOnScroll(this.$refs.form)
-  }
+  
 };
 </script>
 
