@@ -1,6 +1,7 @@
 <template>
     <div class="contact_cont">
         <ReusablePageHeader/>
+        <ContactForm/>
     </div>
 </template>
 <style scopped>
