@@ -72,8 +72,12 @@ export default {
         // Show success notification
         notify('Login successful!', 'success')
 
-        // Redirect to dashboard after a short delay
-        setTimeout(() => this.$router.push('/dashboard'), 500)
+        // Redirect to dashboard after a short delay and refresh page
+        setTimeout(() => {
+          this.$router.push('/dashboard').then(() => {
+            window.location.reload()
+          })
+        }, 500)
       } catch (error) {
         if (error.response && error.response.data) {
           notify(error.response.data.detail || 'Invalid credentials', 'danger')
@@ -84,6 +88,7 @@ export default {
         this.loading = false
       }
     }
+
   }
 }
 </script>

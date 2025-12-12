@@ -1,7 +1,5 @@
 <template>
-  <header 
-    :class="['navbar', { 'navbar-scrolled': isScrolled }]"
-  >
+  <header :class="['navbar', { 'navbar-scrolled': isScrolled }]">
     <nav class="container">
       <div class="left">
         <div class="logo">
@@ -18,7 +16,15 @@
         </ul>
       </div>
 
-      <NuxtLink to="/login" class="btn-signin">Sign In</NuxtLink>
+      <!-- Right buttons -->
+      <div class="right">
+        <NuxtLink v-if="!isLoggedIn" to="/login" class="btn-signin">Sign In</NuxtLink>
+
+        <div v-else class="user-menu">
+          <NuxtLink to="/dashboard" class="btn-dashboard">Dashboard</NuxtLink>
+          <button @click="logout" class="btn-logout">Log Out</button>
+        </div>
+      </div>
     </nav>
   </header>
 </template>
@@ -37,12 +43,14 @@ export default {
         { name: "Services", to: "/services" },
         { name: "Book Now", to: "/book" },
         { name: "Contact", to: "/contact" }
-      ]
+      ],
+      isLoggedIn: false
     }
   },
 
   mounted() {
     window.addEventListener("scroll", this.handleScroll)
+    this.checkLogin()
   },
 
   beforeUnmount() {
@@ -52,6 +60,19 @@ export default {
   methods: {
     handleScroll() {
       this.isScrolled = window.scrollY > 20
+    },
+
+    checkLogin() {
+      const user = localStorage.getItem("user")
+      this.isLoggedIn = !!user
+    },
+
+    logout() {
+      localStorage.removeItem("user")
+      localStorage.removeItem("access_token")
+      localStorage.removeItem("refresh_token")
+      this.isLoggedIn = false
+      this.$router.push("/login")
     }
   }
 }
@@ -73,19 +94,16 @@ export default {
   transition: backdrop-filter 0.3s ease, background-color 0.3s ease;
 }
 
-/* When scrolled */
 .navbar-scrolled {
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(10px);
 }
 
-/* Inside */
 nav.container {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  /* margin: auto; */
 }
 
 .left {
@@ -100,11 +118,11 @@ nav.container {
   gap: 10px;
   font-weight: 700;
   font-size: 25px;
-  
 }
-.logo span{
+.logo span {
   font-family: var(--font-secondary);
 }
+
 .links {
   display: flex;
   gap: 10px;
@@ -114,27 +132,31 @@ nav.container {
 a {
   color: var(--primary-color);
   font-weight: 500;
-    padding: 10px 20px;
+  padding: 10px 20px;
   text-decoration: none;
-  
 }
-a:hover{
-    background: var(--secondary-color);
+a:hover {
+  background: var(--secondary-color);
   border-radius: 5px;
-    transition: .3s;
-    color: var(--primary-color);
+  transition: .3s;
+  color: var(--primary-color);
 }
 
-.active-link, .btn-signin {
+.active-link, .btn-signin, .btn-logout {
   background: var(--primary-color);
   color: white;
+  border: none;
   padding: 10px 20px;
-  border-radius: 5px;
+  border-radius: 8px;
   transition: .3s;
 }
-.btn-signin:hover{
+
+.btn-signin:hover, .btn-dashboard:hover, .btn-logout:hover {
   border: 2px solid var(--primary-color);
-  transition: .3s;
-  /* color: white; */
+}
+
+.user-menu {
+  display: flex;
+  gap: 10px;
 }
 </style>
