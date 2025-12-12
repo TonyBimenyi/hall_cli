@@ -18,7 +18,7 @@
         </ul>
       </div>
 
-      <NuxtLink to="/#" class="btn-signin">Sign In</NuxtLink>
+      <NuxtLink to="/login" class="btn-signin">Sign In</NuxtLink>
     </nav>
   </header>
 </template>

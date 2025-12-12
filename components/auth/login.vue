@@ -7,40 +7,59 @@
 
       <label>Username</label>
       <input v-model="username" type="text" placeholder="Enter your username" />
+      <p v-if="fieldErrors.username" class="field-error">{{ fieldErrors.username }}</p>
 
       <label>Password</label>
       <input v-model="password" type="password" placeholder="••••••••" />
+      <p v-if="fieldErrors.password" class="field-error">{{ fieldErrors.password }}</p>
 
-      <button class="submit-btn" @click="login">Sign In</button>
+      <button class="submit-btn" @click="login" :disabled="loading">
+        <span v-if="loading" class="spinner"></span>
+        <span v-else>Sign In</span>
+      </button>
 
       <p class="switch-text">
         Don't have an account?
-        <a href="/register">Sign up</a>
+        <NuxtLink to="/register" class="btn-signin">Register</NuxtLink>
+    
       </p>
 
-      <p v-if="errorMessage" style="color:red; margin-top:10px;">{{ errorMessage }}</p>
-
+      <!-- Notification component -->
+      <Notification />
     </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import Notification from '~/components/Notification.vue'
+import { notify } from '~/composables/useNotification'
 
 export default {
   name: "LoginView",
+  components: { Notification },
   data() {
     return {
       username: '',
       password: '',
-      errorMessage: ''
+      fieldErrors: {},
+      loading: false
     }
   },
   methods: {
     async login() {
-      this.errorMessage = ''
+      // Reset field errors
+      this.fieldErrors = {}
+
+      // Simple frontend validation
+      if (!this.username) this.fieldErrors.username = 'Username is required'
+      if (!this.password) this.fieldErrors.password = 'Password is required'
+      if (Object.keys(this.fieldErrors).length) return
+
+      const config = useRuntimeConfig()
+      this.loading = true
       try {
-        const response = await axios.post('http://localhost:8000/api/users/login/', {
+        const response = await axios.post(`${config.public.apiBase}/users/login/`, {
           username: this.username,
           password: this.password
         })
@@ -50,21 +69,24 @@ export default {
         localStorage.setItem('access_token', response.data.tokens.access)
         localStorage.setItem('refresh_token', response.data.tokens.refresh)
 
-        // Redirect to dashboard
-        this.$router.push('/dashboard')
+        // Show success notification
+        notify('Login successful!', 'success')
+
+        // Redirect to dashboard after a short delay
+        setTimeout(() => this.$router.push('/dashboard'), 500)
       } catch (error) {
         if (error.response && error.response.data) {
-          this.errorMessage = error.response.data.detail || 'Invalid credentials'
+          notify(error.response.data.detail || 'Invalid credentials', 'danger')
         } else {
-          this.errorMessage = 'An error occurred. Please try again.'
+          notify('An error occurred. Please try again.', 'danger')
         }
+      } finally {
+        this.loading = false
       }
     }
   }
 }
 </script>
-
-
 
 <style scoped>
 /* Keep your existing styles */
@@ -112,6 +134,13 @@ input {
   font-size: 15px;
 }
 
+.field-error {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 3px;
+  margin-bottom: 5px;
+}
+
 .submit-btn {
   width: 100%;
   padding: 14px;
@@ -122,10 +151,29 @@ input {
   margin-top: 25px;
   font-size: 16px;
   cursor: pointer;
+  position: relative;
 }
 
-.submit-btn:hover {
-  background: #0a2b6a;
+.submit-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Loading spinner */
+.spinner {
+  border: 3px solid #f3f3f3; /* Light grey */
+  border-top: 3px solid #fff; /* White */
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .switch-text {

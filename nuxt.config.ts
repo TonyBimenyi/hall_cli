@@ -3,6 +3,11 @@ export default defineNuxtConfig({
     alias:{
     assets:"/<rootDir>/assets",
   },
+  runtimeConfig: {
+    public: {
+      apiBase: 'http://localhost:8000/api' // reusable base URL
+    }
+  },
   css:[
     '../assets/css/main.css',
     '../assets/css/components.css',

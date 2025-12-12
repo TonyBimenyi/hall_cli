@@ -21,7 +21,7 @@
 
       <p class="switch-text">
         Already have an account?
-        <a href="/login">Sign in</a>
+         <NuxtLink to="/login" class="btn-signin">Sign in</NuxtLink>
       </p>
 
     </div>
