@@ -5,30 +5,69 @@
       <h1>Welcome Back</h1>
       <p class="subtitle">Sign in to access your dashboard</p>
 
-      <label>Email</label>
-      <input type="email" placeholder="you@example.com" />
+      <label>Username</label>
+      <input v-model="username" type="text" placeholder="Enter your username" />
 
       <label>Password</label>
-      <input type="password" placeholder="••••••••" />
+      <input v-model="password" type="password" placeholder="••••••••" />
 
-      <button class="submit-btn">Sign In</button>
+      <button class="submit-btn" @click="login">Sign In</button>
 
       <p class="switch-text">
         Don't have an account?
         <a href="/register">Sign up</a>
       </p>
 
+      <p v-if="errorMessage" style="color:red; margin-top:10px;">{{ errorMessage }}</p>
+
     </div>
   </div>
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   name: "LoginView",
-};
+  data() {
+    return {
+      username: '',
+      password: '',
+      errorMessage: ''
+    }
+  },
+  methods: {
+    async login() {
+      this.errorMessage = ''
+      try {
+        const response = await axios.post('http://localhost:8000/api/users/login/', {
+          username: this.username,
+          password: this.password
+        })
+
+        // Save user and tokens in localStorage
+        localStorage.setItem('user', JSON.stringify(response.data.user))
+        localStorage.setItem('access_token', response.data.tokens.access)
+        localStorage.setItem('refresh_token', response.data.tokens.refresh)
+
+        // Redirect to dashboard
+        this.$router.push('/dashboard')
+      } catch (error) {
+        if (error.response && error.response.data) {
+          this.errorMessage = error.response.data.detail || 'Invalid credentials'
+        } else {
+          this.errorMessage = 'An error occurred. Please try again.'
+        }
+      }
+    }
+  }
+}
 </script>
 
+
+
 <style scoped>
+/* Keep your existing styles */
 .auth-container {
   display: flex;
   justify-content: center;
