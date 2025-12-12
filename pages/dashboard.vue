@@ -2,7 +2,7 @@
   <div class="dashboard">
 
     <!-- Header -->
-    <h1 class="welcome">Welcome, {{ userEmail }}!</h1>
+    <h1 class="welcome">Welcome, {{ userFirstName || 'User' }} {{ userLastName || 'User' }}!</h1>
     <p class="subtitle">Manage your bookings and profile</p>
 
     <!-- Content container -->
@@ -64,27 +64,26 @@
 </template>
 
 <script>
+
 export default {
-  name: "Dashboard",
+  name: 'Dashboard',
   data() {
     return {
-      userEmail: ''  // store email from localStorage
+      userFirstName: '',
+      userLastName: ''
     }
   },
   mounted() {
-    // Get the user from localStorage
-    const user = localStorage.getItem('user')
-    if (user) {
-      try {
-        const userData = JSON.parse(user)
-        this.userEmail = userData.email || ''
-      } catch (err) {
-        console.error('Error parsing user from localStorage', err)
-      }
-    }
+    this.userFirstName = useUser().getFirstName()
+    this.userLastName = useUser().getLastName()
   }
 }
 </script>
+
+
+<style scoped>
+/* ...keep existing styles... */
+</style>
 
 <style scoped>
 /* Keep your existing styles */
@@ -141,6 +140,7 @@ export default {
 .booking-list {
   margin-top: 25px;
   display: flex;
+  width: 100%;
   flex-direction: column;
   gap: 20px;
 }
@@ -150,6 +150,7 @@ export default {
   border: 1px solid #ebeff5;
   border-radius: 12px;
   padding: 20px;
+  width: 90%;
   background-color: #f9f9f9;
 }
 
