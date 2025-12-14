@@ -34,21 +34,38 @@
 
           <div class="days-grid">
             <div
-              v-for="(cell, idx) in calendarCells"
-              :key="idx"
-              class="day-cell"
-              :class="{
-                'other-month': !cell.currentMonth,
-                'disabled': isPastDate(cell.date),
-                'selected-start': isSameDate(cell.date, rangeStart),
-                'selected-end': isSameDate(cell.date, rangeEnd),
-                'in-range': isInRange(cell.date, rangeStart, rangeEnd)
-              }"
-              @click="!isPastDate(cell.date) && onDayClick(cell.date)"
-            >
-              <div class="day-number">{{ cell.date.getDate() }}</div>
-            </div>
+  v-for="(cell, idx) in calendarCells"
+  :key="idx"
+  class="day-cell"
+  :class="{
+    'other-month': !cell.currentMonth,
+    'disabled': isPastDate(cell.date) || cell.isReserved,
+    'reserved': cell.isReserved, 
+    'selected-start': isSameDate(cell.date, rangeStart),
+    'selected-end': isSameDate(cell.date, rangeEnd),
+    'in-range': isInRange(cell.date, rangeStart, rangeEnd)
+  }"
+  @click="!isPastDate(cell.date) && !cell.isReserved && onDayClick(cell.date)"
+>
+  <div class="day-number">{{ cell.date.getDate() }}</div>
+</div>
+
           </div>
+          <div class="calendar-legend">
+  <div class="legend-item">
+    <span class="legend-circle reserved"></span> Reserved
+  </div>
+  <div class="legend-item">
+    <span class="legend-circle selected-start"></span> Start
+  </div>
+  <div class="legend-item">
+    <span class="legend-circle selected-end"></span> End
+  </div>
+  <div class="legend-item">
+    <span class="legend-circle in-range"></span> In Range
+  </div>
+</div>
+
 
           <div class="calendar-actions">
             <button class="clear-btn" @click="clearRange" v-if="rangeStart">Clear</button>
@@ -167,7 +184,8 @@ export default {
       hallId: 1,
 
       fieldErrors: {},
-      loading: false
+      loading: false,
+      reservedDates: [], // add this to data
     }
   },
 
@@ -176,17 +194,23 @@ export default {
       return this.viewMonth.toLocaleString(undefined, { month: 'long', year: 'numeric' })
     },
 
-    calendarCells() {
-      const first = new Date(this.viewMonth.getFullYear(), this.viewMonth.getMonth(), 1)
-      const startDate = new Date(first)
-      startDate.setDate(first.getDate() - first.getDay())
+   calendarCells() {
+  const first = new Date(this.viewMonth.getFullYear(), this.viewMonth.getMonth(), 1)
+  const startDate = new Date(first)
+  startDate.setDate(first.getDate() - first.getDay())
 
-      return Array.from({ length: 42 }, (_, i) => {
-        const d = new Date(startDate)
-        d.setDate(startDate.getDate() + i)
-        return { date: d, currentMonth: d.getMonth() === this.viewMonth.getMonth() }
-      })
-    },
+  return Array.from({ length: 42 }, (_, i) => {
+    const d = new Date(startDate)
+    d.setDate(startDate.getDate() + i)
+    const formatted = this.formatYMD(d)
+    return { 
+      date: d, 
+      currentMonth: d.getMonth() === this.viewMonth.getMonth(),
+      isReserved: this.reservedDates.includes(formatted) // add reserved flag
+    }
+  })
+},
+
 
     startDate() {
       return this.rangeStart ? this.formatYMD(this.rangeStart) : ""
@@ -204,10 +228,14 @@ export default {
   },
 
   mounted() {
+    
     const user = JSON.parse(localStorage.getItem('user') || '{}')
     this.name = `${user.first_name || ''} ${user.last_name || ''}`
     this.email = user.email || ''
     this.fetchHall()
+    this.fetchHall()
+  this.fetchReservedDates()
+
   },
 
   methods: {
@@ -255,6 +283,7 @@ export default {
 
     // If response is 200 or 201, show success
     notify('Booking created successfully!', 'success')
+    this.fetchReservedDates()
 
     // Reset form
     this.clearRange()
@@ -288,8 +317,32 @@ export default {
     }
   } finally {
     this.loading = false
+    this.fetchReservedDates()
   }
 },
+
+
+async fetchReservedDates() {
+  try {
+    const token = localStorage.getItem('access_token')
+    const res = await axios.get(`http://localhost:8000/api/bookings/?hall=${this.hallId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    // Store all dates in YYYY-MM-DD format
+    this.reservedDates = res.data.flatMap(b => {
+      const start = new Date(b.date_start)
+      const end = new Date(b.date_end)
+      const dates = []
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        dates.push(this.formatYMD(new Date(d)))
+      }
+      return dates
+    })
+  } catch (err) {
+    console.error('Failed to fetch reserved dates', err)
+  }
+},
+
 
 
 
@@ -544,7 +597,53 @@ textarea { height: 100px; resize: none; }
   height: 50px;
   font-size: var(--fs-base);
 }
+.reserved .day-number {
+  background: #f8d7da; /* light red */
+  color: #721c24;
+  cursor: not-allowed;
+  border-radius: 5px;
+  /* padding: px; */
+}
+
 
 .mt-20 { margin-top: 20px; }
+.calendar-legend {
+  display: flex;
+  gap: 20px;
+  margin-top: 12px;
+  font-size: 13px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-circle {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid #ccc;
+}
+
+.legend-circle.reserved {
+  background: #f8d7da; /* same as your reserved color */
+}
+
+.legend-circle.selected-start {
+  background: var(--primary-color); /* same as your start date */
+}
+
+.legend-circle.selected-end {
+  background: var(--primary-color); /* same as your end date */
+}
+
+.legend-circle.in-range {
+  background: rgba(55,81,255,0.06); /* same as your in-range */
+}
 
 </style>
