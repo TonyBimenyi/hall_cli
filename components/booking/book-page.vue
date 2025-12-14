@@ -9,21 +9,14 @@
         <h2 class="title">Select Date & Package</h2>
 
         <div class="calendar-wrapper">
-
-          <!-- HEADER -->
           <div class="calendar-header">
-
-            <button class="nav" @click="prevMonth" aria-label="Previous month">‹</button>
-
-            <!-- CLICKABLE MONTH/YEAR TITLE -->
+            <button class="nav" @click="prevMonth">‹</button>
             <div class="month-title" @click="toggleMonthDropdown">
               {{ monthYearLabel }}
             </div>
-
-            <button class="nav" @click="nextMonth" aria-label="Next month">›</button>
+            <button class="nav" @click="nextMonth">›</button>
           </div>
 
-          <!-- MONTH DROPDOWN -->
           <div v-if="showMonthDropdown" class="month-dropdown">
             <div
               class="month-option"
@@ -35,12 +28,10 @@
             </div>
           </div>
 
-          <!-- WEEKDAYS -->
           <div class="weekday-row">
             <div class="weekday" v-for="d in weekdays" :key="d">{{ d }}</div>
           </div>
 
-          <!-- DAYS GRID -->
           <div class="days-grid">
             <div
               v-for="(cell, idx) in calendarCells"
@@ -48,7 +39,6 @@
               class="day-cell"
               :class="{
                 'other-month': !cell.currentMonth,
-                'is-today': isToday(cell.date),
                 'disabled': isPastDate(cell.date),
                 'selected-start': isSameDate(cell.date, rangeStart),
                 'selected-end': isSameDate(cell.date, rangeEnd),
@@ -60,43 +50,30 @@
             </div>
           </div>
 
-          <!-- ACTIONS -->
           <div class="calendar-actions">
-            <button class="clear-btn" @click="clearRange" v-if="rangeStart || rangeEnd">Clear</button>
-
+            <button class="clear-btn" @click="clearRange" v-if="rangeStart">Clear</button>
             <div class="selected-labels">
               <div><strong>Start:</strong> {{ startDate || '—' }}</div>
               <div><strong>End:</strong> {{ endDate || '—' }}</div>
             </div>
           </div>
-
         </div>
 
-        <!-- FORM LEFT SIDE -->
         <div class="form-group mt-20">
           <label>Event Type</label>
           <select v-model="eventType">
             <option value="">Select type</option>
-            <option>Conference</option>
-            <option>Wedding</option>
-            <option>Corporate</option>
+            <option value="mariage">Mariage</option>
+            <option value="dot">Dot</option>
+            <option value="conference">Conference</option>
+            <option value="graduation">Graduation</option>
+            <option value="autres">Autres</option>
           </select>
         </div>
 
-        <div class="form-group">
-          <label>Package</label>
-          <select v-model="packageSelected">
-            <option value="">Select package</option>
-            <option>Basic — $500</option>
-            <option>Premium — $1,200</option>
-            <option>Luxury — $2,000+</option>
-          </select>
+        <div class="prices">
+          <p><strong>Total:</strong> {{ totalCost }} USD</p>
         </div>
-
-        <!-- PRICES -->
-           <div class="prices">
-              <p><strong>Total avec les jours: </strong> 2300 Fbu</p> 
-           </div>
 
       </div>
 
@@ -116,17 +93,17 @@
 
         <div class="form-group">
           <label>Guest Count</label>
-          <input type="number" v-model="guestCount" min="1" />
+          <input type="number" v-model="guestCount" />
         </div>
 
         <div class="form-group">
           <label>Your Name</label>
-          <input type="text" v-model="name" />
+          <input type="text" v-model="name" readonly />
         </div>
 
         <div class="form-group">
           <label>Email</label>
-          <input type="email" v-model="email" />
+          <input type="email" v-model="email" readonly />
         </div>
 
         <div class="form-group">
@@ -135,11 +112,13 @@
         </div>
 
         <div class="form-group">
-          <label>Special Requests</label>
+          <label>Notes</label>
           <textarea v-model="notes"></textarea>
         </div>
 
-        <button class="submit-btn">Confirm Booking</button>
+        <button class="submit-btn" @click="submitBooking">
+          Confirm Booking
+        </button>
 
       </div>
 
@@ -149,6 +128,8 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   data() {
     return {
@@ -160,18 +141,18 @@ export default {
       ],
       showMonthDropdown: false,
 
-      // calendar range
       rangeStart: null,
       rangeEnd: null,
 
-      // form
       eventType: "",
-      packageSelected: "",
       guestCount: 100,
       name: "",
       email: "",
       phone: "",
-      notes: ""
+      notes: "",
+
+      hallPrice: 0,
+      hallId: 1
     }
   },
 
@@ -182,113 +163,106 @@ export default {
 
     calendarCells() {
       const first = new Date(this.viewMonth.getFullYear(), this.viewMonth.getMonth(), 1)
-      const startDay = first.getDay()
       const startDate = new Date(first)
-      startDate.setDate(first.getDate() - startDay)
+      startDate.setDate(first.getDate() - first.getDay())
 
-      const cells = []
-      for (let i=0; i<42; i++) {
+      return Array.from({ length: 42 }, (_, i) => {
         const d = new Date(startDate)
         d.setDate(startDate.getDate() + i)
-        cells.push({ date: d, currentMonth: d.getMonth() === this.viewMonth.getMonth() })
-      }
-      return cells
+        return { date: d, currentMonth: d.getMonth() === this.viewMonth.getMonth() }
+      })
     },
 
     startDate() {
       return this.rangeStart ? this.formatYMD(this.rangeStart) : ""
     },
+
     endDate() {
       return this.rangeEnd ? this.formatYMD(this.rangeEnd) : ""
+    },
+
+    totalCost() {
+      if (!this.rangeStart || !this.rangeEnd) return 0
+      const days = (this.rangeEnd - this.rangeStart) / (1000 * 60 * 60 * 24) + 1
+      return (days * this.hallPrice).toFixed(2)
     }
   },
 
+  mounted() {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    this.name = `${user.first_name || ''} ${user.last_name || ''}`
+    this.email = user.email || ''
+    this.fetchHall()
+  },
+
   methods: {
-    // month change
-    prevMonth() {
-      this.viewMonth = new Date(this.viewMonth.getFullYear(), this.viewMonth.getMonth() - 1, 1)
-    },
-    nextMonth() {
-      this.viewMonth = new Date(this.viewMonth.getFullYear(), this.viewMonth.getMonth() + 1, 1)
-    },
-
-    toggleMonthDropdown() {
-      this.showMonthDropdown = !this.showMonthDropdown
-    },
-
-    selectMonth(index) {
-      this.viewMonth = new Date(this.viewMonth.getFullYear(), index, 1)
-      this.showMonthDropdown = false
+    async fetchHall() {
+      try {
+        const token = localStorage.getItem('access_token')
+        const res = await axios.get('http://localhost:8000/api/halls/', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const hall = res.data.find(h => h.id === this.hallId)
+        this.hallPrice = hall ? Number(hall.price_per_day) : 0
+      } catch (err) {
+        console.error('Failed to fetch hall', err)
+      }
     },
 
-    // click day
-    onDayClick(date) {
-      const clicked = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    async submitBooking() {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}')
+        const token = localStorage.getItem('access_token')
+        await axios.post('http://localhost:8000/api/bookings/', {
+          
+          hall: this.hallId,
+          agency: 1,
+          date_start: this.startDate,
+          date_end: this.endDate,
+          event_type: this.eventType,
+          total_cost: this.totalCost,
+          notes: this.notes
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
 
-      if (!this.rangeStart) {
-        this.rangeStart = clicked
+        alert('Booking created successfully!')
+      } catch (err) {
+        console.error(err)
+        alert('Booking failed. Make sure you are logged in.')
+      }
+    },
+
+    prevMonth() { this.viewMonth = new Date(this.viewMonth.getFullYear(), this.viewMonth.getMonth() - 1, 1) },
+    nextMonth() { this.viewMonth = new Date(this.viewMonth.getFullYear(), this.viewMonth.getMonth() + 1, 1) },
+    toggleMonthDropdown() { this.showMonthDropdown = !this.showMonthDropdown },
+    selectMonth(i) { this.viewMonth = new Date(this.viewMonth.getFullYear(), i, 1); this.showMonthDropdown = false },
+
+    onDayClick(d) {
+      if (!this.rangeStart || (this.rangeStart && this.rangeEnd)) {
+        this.rangeStart = d
         this.rangeEnd = null
-        return
+      } else if (d >= this.rangeStart) {
+        this.rangeEnd = d
       }
-
-      if (this.rangeStart && !this.rangeEnd) {
-        if (clicked < this.rangeStart) {
-          this.rangeEnd = this.rangeStart
-          this.rangeStart = clicked
-        } else if (this.isSameDate(clicked, this.rangeStart)) {
-          this.rangeStart = null
-          this.rangeEnd = null
-        } else {
-          this.rangeEnd = clicked
-        }
-        return
-      }
-
-      this.rangeStart = clicked
-      this.rangeEnd = null
     },
 
-    clearRange() {
-      this.rangeStart = null
-      this.rangeEnd = null
-    },
+    clearRange() { this.rangeStart = this.rangeEnd = null },
 
-    // date utils
     formatYMD(d) {
       return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
     },
 
-    isSameDate(a, b) {
-      if (!a || !b) return false
-      return a.getFullYear() === b.getFullYear() &&
-             a.getMonth() === b.getMonth() &&
-             a.getDate() === b.getDate()
-    },
-
-    isInRange(date, start, end) {
-      if (!start || !end) return false
-      const d = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
-      const s = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime()
-      const e = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime()
-      return d >= s && d <= e
-    },
-
-    isToday(date) {
-      const t = new Date()
-      return this.isSameDate(date, t)
-    },
-
-    // NEW: disable past dates
-    isPastDate(date) {
-      const today = new Date()
-      today.setHours(0,0,0,0)
-
-      const d = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-      return d < today
-    }
+    isSameDate(a,b){ return a && b && a.toDateString() === b.toDateString() },
+    isInRange(d,s,e){ return s && e && d >= s && d <= e },
+    isPastDate(d){ return d < new Date().setHours(0,0,0,0) }
   }
 }
 </script>
+
+<style scoped>
+/* Keep your previous styles as-is */
+</style>
 
 <style scoped>
 /* layout */
