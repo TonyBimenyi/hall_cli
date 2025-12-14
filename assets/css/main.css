@@ -72,3 +72,8 @@
 
   --font-secondary: 'Noto Serif', serif;
 }
+
+/* Keep all previous styles as-is, add .field-error for errors */
+.field-error { color: #ef4444; font-size: 13px; margin-top: 3px; margin-bottom: 5px; }
+.spinner { border: 3px solid #f3f3f3; border-top: 3px solid #fff; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }

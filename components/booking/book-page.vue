@@ -69,6 +69,7 @@
             <option value="graduation">Graduation</option>
             <option value="autres">Autres</option>
           </select>
+          <p v-if="fieldErrors.event_type" class="field-error">{{ fieldErrors.event_type }}</p>
         </div>
 
         <div class="prices">
@@ -84,16 +85,19 @@
         <div class="form-group">
           <label>Start Date</label>
           <input type="text" :value="startDate" readonly />
+          <p v-if="fieldErrors.date_start" class="field-error">{{ fieldErrors.date_start }}</p>
         </div>
 
         <div class="form-group">
           <label>End Date</label>
           <input type="text" :value="endDate" readonly />
+          <p v-if="fieldErrors.date_end" class="field-error">{{ fieldErrors.date_end }}</p>
         </div>
 
         <div class="form-group">
           <label>Guest Count</label>
           <input type="number" v-model="guestCount" />
+          <p v-if="fieldErrors.guest_count" class="field-error">{{ fieldErrors.guest_count }}</p>
         </div>
 
         <div class="form-group">
@@ -108,20 +112,25 @@
 
         <div class="form-group">
           <label>Phone</label>
-          <input type="text" v-model="phone" />
+          <input type="number" v-model="phone" />
+          <p v-if="fieldErrors.phone" class="field-error">{{ fieldErrors.phone }}</p>
         </div>
 
         <div class="form-group">
           <label>Notes</label>
           <textarea v-model="notes"></textarea>
+          <p v-if="fieldErrors.notes" class="field-error">{{ fieldErrors.notes }}</p>
         </div>
 
-        <button class="submit-btn" @click="submitBooking">
-          Confirm Booking
+        <button class="submit-btn" @click="submitBooking" :disabled="loading">
+          <span v-if="loading" class="spinner"></span>
+          <span v-else>Confirm Booking</span>
         </button>
 
       </div>
-
+      
+      <!-- Notification component -->
+      <Notification />
     </div>
 
   </div>
@@ -129,8 +138,11 @@
 
 <script>
 import axios from 'axios'
+import Notification from '~/components/Notification.vue'
+import { notify } from '~/composables/useNotification'
 
 export default {
+  components: { Notification },
   data() {
     return {
       viewMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -152,7 +164,10 @@ export default {
       notes: "",
 
       hallPrice: 0,
-      hallId: 1
+      hallId: 1,
+
+      fieldErrors: {},
+      loading: false
     }
   },
 
@@ -210,28 +225,73 @@ export default {
     },
 
     async submitBooking() {
-      try {
-        const user = JSON.parse(localStorage.getItem('user') || '{}')
-        const token = localStorage.getItem('access_token')
-        await axios.post('http://localhost:8000/api/bookings/', {
-          
-          hall: this.hallId,
-          agency: 1,
-          date_start: this.startDate,
-          date_end: this.endDate,
-          event_type: this.eventType,
-          total_cost: this.totalCost,
-          notes: this.notes
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+  this.fieldErrors = {}
 
-        alert('Booking created successfully!')
-      } catch (err) {
-        console.error(err)
-        alert('Booking failed. Make sure you are logged in.')
-      }
-    },
+  // Frontend validation
+  if (!this.rangeStart) this.fieldErrors.date_start = 'Start date is required'
+  if (!this.rangeEnd) this.fieldErrors.date_end = 'End date is required'
+  if (!this.eventType) this.fieldErrors.event_type = 'Event type is required'
+  if (!this.phone) this.fieldErrors.phone = 'Phone is required'
+
+  if (Object.keys(this.fieldErrors).length) {
+    notify('Please correct the errors in the form.', 'danger')
+    return
+  }
+
+  try {
+    this.loading = true
+    const token = localStorage.getItem('access_token')
+    const response = await axios.post('http://localhost:8000/api/bookings/', {
+      hall: this.hallId,
+      agency: 1,
+      date_start: this.startDate,
+      date_end: this.endDate,
+      event_type: this.eventType,
+      total_cost: this.totalCost,
+      notes: this.notes
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    // If response is 200 or 201, show success
+    notify('Booking created successfully!', 'success')
+
+    // Reset form
+    this.clearRange()
+    this.eventType = ''
+    this.guestCount = 100
+    this.phone = ''
+    this.notes = ''
+
+  } catch (err) {
+    if (err.response && err.response.data) {
+      const data = err.response.data
+
+      // Map backend field errors
+      Object.keys(data).forEach(key => {
+        if (Array.isArray(data[key])) {
+          const msg = data[key][0]
+          if (key === 'hall') {
+            // Map hall errors to date fields
+            this.fieldErrors.date_start = msg
+            this.fieldErrors.date_end = msg
+            // Show notify using backend message
+            notify(msg, 'danger')
+          } else {
+            this.fieldErrors[key] = msg
+            notify(msg, 'danger')
+          }
+        }
+      })
+    } else {
+      notify('Booking failed. Please try again.', 'danger')
+    }
+  } finally {
+    this.loading = false
+  }
+},
+
+
 
     prevMonth() { this.viewMonth = new Date(this.viewMonth.getFullYear(), this.viewMonth.getMonth() - 1, 1) },
     nextMonth() { this.viewMonth = new Date(this.viewMonth.getFullYear(), this.viewMonth.getMonth() + 1, 1) },
@@ -262,7 +322,9 @@ export default {
 
 <style scoped>
 /* Keep your previous styles as-is */
+/* ... (same as your original styles) ... */
 </style>
+
 
 <style scoped>
 /* layout */
