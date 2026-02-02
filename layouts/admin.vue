@@ -1,10 +1,7 @@
 <template>
-<div>
-    <AdminAppAdminSideBar />
-  </div>
-    
-    <main>
+  <AdminAppAdminSideBar>
+    <template #default>
       <slot />
-    </main>
-
+    </template>
+  </AdminAppAdminSideBar>
 </template>

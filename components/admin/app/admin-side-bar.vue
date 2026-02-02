@@ -119,6 +119,7 @@ export default {
   gap: 12px;
 }
 
+
 .logo {
   width: 42px;
   height: 42px;
@@ -146,20 +147,41 @@ export default {
   color: #6b7280;
 }
 
-/* Menu */
+/* Sidebar Menu */
 .menu {
+  display: flex;
+  flex-direction: column;
   padding: 10px;
+  align-items: stretch; /* make links full width */
 }
 
 .menu-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  text-align: left;            /* text left */
+  width: 100%;                 /* full width */
   padding: 10px 14px;
-  border-radius: 8px;
+  gap: 12px;                   /* space between icon and text */
+  border-radius: 6px;
   color: #6b7280;
   text-decoration: none;
   transition: background 0.2s, color 0.2s;
+  box-sizing: border-box;
+}
+
+.menu-item i {
+  min-width: 24px;  /* icon takes fixed width */
+  text-align: left;
+  font-size: 18px;
+}
+
+.menu-item:hover {
+  background-color: #f1f5f9;
+  color: #2563eb;
+}
+
+.menu-item.active {
+  background-color: #e0e7ff;
+  color: #2563eb;
+  font-weight: 600;
 }
 
 .menu-item i {
@@ -194,6 +216,7 @@ export default {
   align-items: center;
   gap: 16px;
   padding: 0 16px;
+  width: 100%;
 }
 
 .menu-btn {
@@ -201,6 +224,7 @@ export default {
   border: none;
   font-size: 20px;
   cursor: pointer;
+  margin: 0;
 }
 
 .page-title {
