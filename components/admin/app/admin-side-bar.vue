@@ -14,17 +14,18 @@
       </div>
 
       <nav class="menu">
-        <NuxtLink
-          v-for="item in navigation"
-          :key="item.title"
-          :to="item.url"
-          class="menu-item"
-          active-class="active"
-        >
-          <i :class="item.icon"></i>
-          <span v-if="!isCollapsed">{{ item.title }}</span>
-        </NuxtLink>
-      </nav>
+  <NuxtLink
+    v-for="item in navigation"
+    :key="item.title"
+    :to="item.url"
+    class="menu-item"
+    :class="{ active: isActive(item.url) }"
+  >
+    <i :class="item.icon"></i>
+    <span v-if="!isCollapsed">{{ item.title }}</span>
+  </NuxtLink>
+</nav>
+
     </aside>
 
     <!-- Main -->
@@ -46,48 +47,30 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: "AppLayout",
+<script setup>
+import { ref, computed } from "vue";
+import { useRoute } from "vue-router";
 
-  data() {
-    return {
-      isCollapsed: false,
-      navigation: [
-        { title: "Dashboard", url: "/", icon: "fa-solid fa-house" },
-        { title: "Bookings", url: "/bookings", icon: "fa-solid fa-calendar-days" },
-        { title: "Payments", url: "/payments", icon: "fa-solid fa-credit-card" },
-        { title: "Halls", url: "/halls", icon: "fa-solid fa-building" },
-        { title: "Personnel", url: "/personnel", icon: "fa-solid fa-users" },
-      ],
-    };
-  },
+const isCollapsed = ref(false);
+const route = useRoute();
 
-  mounted() {
-    // Collapse sidebar on mobile by default
-    if (window.innerWidth < 768) {
-      this.isCollapsed = true;
-    }
+const navigation = [
+  { title: "Dashboard", url: "/admin", icon: "fa-solid fa-house" },
+  { title: "Bookings", url: "/admin/bookings", icon: "fa-solid fa-calendar-days" },
+  { title: "Payments", url: "/admin/payments", icon: "fa-solid fa-credit-card" },
+  { title: "Halls", url: "/admin/halls", icon: "fa-solid fa-building" },
+  { title: "Personnel", url: "/admin/personnel", icon: "fa-solid fa-users" },
+];
 
-    window.addEventListener("resize", this.handleResize);
-  },
+const toggleSidebar = () => {
+  isCollapsed.value = !isCollapsed.value;
+};
 
-  beforeUnmount() {
-    window.removeEventListener("resize", this.handleResize);
-  },
-
-  methods: {
-    toggleSidebar() {
-      this.isCollapsed = !this.isCollapsed;
-    },
-    handleResize() {
-      if (window.innerWidth < 768) {
-        this.isCollapsed = true;
-      }
-    },
-  },
+const isActive = (url) => {
+  return route.path === url;
 };
 </script>
+
 
 <style>
 /* Layout */
@@ -123,7 +106,7 @@ export default {
 .logo {
   width: 42px;
   height: 42px;
-  background: #2563eb;
+  background: var(--primary-color);
   color: #fff;
   border-radius: 12px;
   display: flex;
@@ -158,29 +141,31 @@ export default {
 .menu-item {
   text-align: left;            /* text left */
   width: 100%;                 /* full width */
-  padding: 10px 14px;
-  gap: 12px;                   /* space between icon and text */
+  padding: 15px 14px;
+  gap: 15px;                   /* space between icon and text */
   border-radius: 6px;
   color: #6b7280;
   text-decoration: none;
   transition: background 0.2s, color 0.2s;
   box-sizing: border-box;
+  margin-left: 5px;
 }
 
 .menu-item i {
   min-width: 24px;  /* icon takes fixed width */
   text-align: left;
   font-size: 18px;
+  margin-right: 10px;
 }
 
 .menu-item:hover {
   background-color: #f1f5f9;
-  color: #2563eb;
+  color: var(--primary-color);
 }
 
 .menu-item.active {
   background-color: #e0e7ff;
-  color: #2563eb;
+  color: var(--primary-color);
   font-weight: 600;
 }
 
@@ -191,12 +176,12 @@ export default {
 
 .menu-item:hover {
   background: #f1f5f9;
-  color: #2563eb;
+  color: var(--primary-color);
 }
 
 .menu-item.active {
   background: #e0e7ff;
-  color: #2563eb;
+  color: var(--primary-color);
   font-weight: 600;
 }
 
@@ -205,6 +190,7 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
+  margin: 0;
 }
 
 /* Header */
@@ -236,6 +222,7 @@ export default {
 .content {
   padding: 20px;
   overflow-y: auto;
+  margin: 0;
 }
 
 /* Mobile */
@@ -249,5 +236,8 @@ export default {
   .main {
     margin-left: 80px;
   }
+  .menu-item.active {
+
+}
 }
 </style>

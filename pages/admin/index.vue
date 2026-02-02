@@ -1,4 +1,11 @@
-<template><h1>Admin Dashboard</h1></template>
+<template>
+<div class="dashboard-container">
+    <h1>Admin Dashboard</h1>
+<p>Welcome back! Here's what's happening today.</p>
+    <AdminDashboardDetails />
+</div>
+
+</template>
 
 <script setup>
 definePageMeta({ layout: 'admin' })
