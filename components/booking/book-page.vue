@@ -1,156 +1,177 @@
 <template>
-  <div class="booking-container">
+  <section class="booking-section">
+    <div class="container">
+      <h1 class="page-title">Book Your Perfect Event</h1>
 
-    <div class="card">
+      <div class="booking-layout">
+        <!-- Left: Calendar & Quick Info -->
+        <div class="left-panel card">
+          <h2 class="panel-title">Choose Your Dates</h2>
 
-      <!-- LEFT PANEL -->
-      <div class="left-panel">
-
-        <h2 class="title">Select Date & Package</h2>
-
-        <div class="calendar-wrapper">
-          <div class="calendar-header">
-            <button class="nav" @click="prevMonth">‹</button>
-            <div class="month-title" @click="toggleMonthDropdown">
-              {{ monthYearLabel }}
+          <div class="calendar-wrapper">
+            <div class="calendar-header">
+              <button class="nav-btn prev" @click="prevMonth">‹</button>
+              <div class="month-year" @click="toggleMonthDropdown">
+                {{ monthYearLabel }}
+              </div>
+              <button class="nav-btn next" @click="nextMonth">›</button>
             </div>
-            <button class="nav" @click="nextMonth">›</button>
-          </div>
 
-          <div v-if="showMonthDropdown" class="month-dropdown">
-            <div
-              class="month-option"
-              v-for="(m,index) in monthNames"
-              :key="m"
-              @click="selectMonth(index)"
-            >
-              {{ m }} {{ viewMonth.getFullYear() }}
+            <transition name="fade">
+              <div v-if="showMonthDropdown" class="month-dropdown">
+                <div
+                  v-for="(month, idx) in monthNames"
+                  :key="month"
+                  class="month-option"
+                  @click="selectMonth(idx)"
+                >
+                  {{ month }} {{ viewMonth.getFullYear() }}
+                </div>
+              </div>
+            </transition>
+
+            <div class="weekdays">
+              <div v-for="day in weekdays" :key="day" class="weekday">{{ day }}</div>
+            </div>
+
+            <div class="days-grid">
+              <div
+                v-for="(cell, idx) in calendarCells"
+                :key="idx"
+                class="day-cell"
+                :class="{
+                  'other-month': !cell.currentMonth,
+                  'past disabled': isPastDate(cell.date),
+                  'reserved disabled': cell.isReserved,
+                  'selected-start': isSameDate(cell.date, rangeStart),
+                  'selected-end': isSameDate(cell.date, rangeEnd),
+                  'in-range': isInRange(cell.date, rangeStart, rangeEnd)
+                }"
+                @click="!isPastDate(cell.date) && !cell.isReserved && onDayClick(cell.date)"
+              >
+                <span class="day-number">{{ cell.date.getDate() }}</span>
+              </div>
+            </div>
+
+            <div class="calendar-legend">
+              <div class="legend-item">
+                <span class="legend-circle reserved"></span> Reserved
+              </div>
+              <div class="legend-item">
+                <span class="legend-circle selected"></span> Selected
+              </div>
+              <div class="legend-item">
+                <span class="legend-circle range"></span> In Range
+              </div>
+            </div>
+
+            <div class="selection-info">
+              <button v-if="rangeStart" class="clear-btn" @click="clearRange">
+                Clear Dates
+              </button>
+              <div class="selected-dates">
+                <div><strong>From:</strong> {{ startDate || 'Not selected' }}</div>
+                <div><strong>To:</strong> {{ endDate || 'Not selected' }}</div>
+              </div>
             </div>
           </div>
 
-          <div class="weekday-row">
-            <div class="weekday" v-for="d in weekdays" :key="d">{{ d }}</div>
-          </div>
+          <div class="quick-info mt-32">
+            <div class="form-group">
+              <label>Event Type</label>
+              <select v-model="eventType" :class="{ 'error-border': fieldErrors.event_type }">
+                <option value="">Select event type</option>
+                <option value="mariage">Mariage</option>
+                <option value="dot">Dot</option>
+                <option value="conference">Conference</option>
+                <option value="graduation">Graduation</option>
+                <option value="autres">Autres</option>
+              </select>
+              <p v-if="fieldErrors.event_type" class="field-error">{{ fieldErrors.event_type }}</p>
+            </div>
 
-          <div class="days-grid">
-            <div
-  v-for="(cell, idx) in calendarCells"
-  :key="idx"
-  class="day-cell"
-  :class="{
-    'other-month': !cell.currentMonth,
-    'disabled': isPastDate(cell.date) || cell.isReserved,
-    'reserved': cell.isReserved, 
-    'selected-start': isSameDate(cell.date, rangeStart),
-    'selected-end': isSameDate(cell.date, rangeEnd),
-    'in-range': isInRange(cell.date, rangeStart, rangeEnd)
-  }"
-  @click="!isPastDate(cell.date) && !cell.isReserved && onDayClick(cell.date)"
->
-  <div class="day-number">{{ cell.date.getDate() }}</div>
-</div>
-
-          </div>
-          <div class="calendar-legend">
-  <div class="legend-item">
-    <span class="legend-circle reserved"></span> Reserved
-  </div>
-  <div class="legend-item">
-    <span class="legend-circle selected-start"></span> Start
-  </div>
-  <div class="legend-item">
-    <span class="legend-circle selected-end"></span> End
-  </div>
-  <div class="legend-item">
-    <span class="legend-circle in-range"></span> In Range
-  </div>
-</div>
-
-
-          <div class="calendar-actions">
-            <button class="clear-btn" @click="clearRange" v-if="rangeStart">Clear</button>
-            <div class="selected-labels">
-              <div><strong>Start:</strong> {{ startDate || '—' }}</div>
-              <div><strong>End:</strong> {{ endDate || '—' }}</div>
+            <div class="price-display">
+              <span class="price-label">Estimated Total:</span>
+              <span class="price-value">${{ totalCost }} USD</span>
             </div>
           </div>
         </div>
 
-        <div class="form-group mt-20">
-          <label>Event Type</label>
-          <select v-model="eventType">
-            <option value="">Select type</option>
-            <option value="mariage">Mariage</option>
-            <option value="dot">Dot</option>
-            <option value="conference">Conference</option>
-            <option value="graduation">Graduation</option>
-            <option value="autres">Autres</option>
-          </select>
-          <p v-if="fieldErrors.event_type" class="field-error">{{ fieldErrors.event_type }}</p>
-        </div>
+        <!-- Right: Booking Form -->
+        <div class="right-panel card">
+          <h2 class="panel-title">Booking Information</h2>
 
-        <div class="prices">
-          <p><strong>Total:</strong> {{ totalCost }} USD</p>
-        </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Start Date</label>
+              <input type="text" :value="startDate" readonly :class="{ 'error-border': fieldErrors.date_start }" />
+              <p v-if="fieldErrors.date_start" class="field-error">{{ fieldErrors.date_start }}</p>
+            </div>
 
+            <div class="form-group">
+              <label>End Date</label>
+              <input type="text" :value="endDate" readonly :class="{ 'error-border': fieldErrors.date_end }" />
+              <p v-if="fieldErrors.date_end" class="field-error">{{ fieldErrors.date_end }}</p>
+            </div>
+
+            <div class="form-group">
+              <label>Number of Guests</label>
+              <input
+                type="number"
+                v-model.number="guestCount"
+                min="10"
+                :class="{ 'error-border': fieldErrors.guest_count }"
+              />
+              <p v-if="fieldErrors.guest_count" class="field-error">{{ fieldErrors.guest_count }}</p>
+            </div>
+
+            <div class="form-group">
+              <label>Your Name</label>
+              <input type="text" v-model="name" readonly />
+            </div>
+
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" v-model="email" readonly />
+            </div>
+
+            <div class="form-group">
+              <label>Phone Number <span class="required">*</span></label>
+              <input
+                type="tel"
+                v-model="phone"
+                :class="{ 'error-border': fieldErrors.phone }"
+              />
+              <p v-if="fieldErrors.phone" class="field-error">{{ fieldErrors.phone }}</p>
+            </div>
+
+            <div class="form-group full-width">
+              <label>Additional Notes</label>
+              <textarea
+                v-model="notes"
+                rows="4"
+                placeholder="Any special requests, catering preferences, setup details..."
+              ></textarea>
+              <p v-if="fieldErrors.notes" class="field-error">{{ fieldErrors.notes }}</p>
+            </div>
+          </div>
+
+          <button
+            class="submit-btn"
+            @click="submitBooking"
+            :disabled="loading || !rangeStart || !rangeEnd"
+          >
+            <span v-if="loading">
+              <span class="spinner"></span> Processing...
+            </span>
+            <span v-else>Confirm Booking</span>
+          </button>
+        </div>
       </div>
-
-      <!-- RIGHT PANEL -->
-      <div class="right-panel">
-        <h2 class="title">Event Details</h2>
-
-        <div class="form-group">
-          <label>Start Date</label>
-          <input type="text" :value="startDate" readonly />
-          <p v-if="fieldErrors.date_start" class="field-error">{{ fieldErrors.date_start }}</p>
-        </div>
-
-        <div class="form-group">
-          <label>End Date</label>
-          <input type="text" :value="endDate" readonly />
-          <p v-if="fieldErrors.date_end" class="field-error">{{ fieldErrors.date_end }}</p>
-        </div>
-
-        <div class="form-group">
-          <label>Guest Count</label>
-          <input type="number" v-model="guestCount" />
-          <p v-if="fieldErrors.guest_count" class="field-error">{{ fieldErrors.guest_count }}</p>
-        </div>
-
-        <div class="form-group">
-          <label>Your Name</label>
-          <input type="text" v-model="name" readonly />
-        </div>
-
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" v-model="email" readonly />
-        </div>
-
-        <div class="form-group">
-          <label>Phone</label>
-          <input type="number" v-model="phone" />
-          <p v-if="fieldErrors.phone" class="field-error">{{ fieldErrors.phone }}</p>
-        </div>
-
-        <div class="form-group">
-          <label>Notes</label>
-          <textarea v-model="notes"></textarea>
-          <p v-if="fieldErrors.notes" class="field-error">{{ fieldErrors.notes }}</p>
-        </div>
-
-        <button class="submit-btn" @click="submitBooking" :disabled="loading">
-          <span v-if="loading" class="spinner"></span>
-          <span v-else>Confirm Booking</span>
-        </button>
-
-      </div>
-      
-      <!-- Notification component -->
-      <Notification />
     </div>
 
-  </div>
+    <Notification />
+  </section>
 </template>
 
 <script>
@@ -380,270 +401,338 @@ async fetchReservedDates() {
 
 
 <style scoped>
-/* layout */
-.booking-container {
-  display: flex;
-  justify-content: center;
-  padding: 40px ;
-  background: #f7f9fc;
-  /* width: 100%; */
-  /* min-height: 100vh; */
+.booking-section {
+  padding: clamp(4.5rem, 9vw, 8rem) 0;
+  background: #f8faff;
 }
-.calendar-header button{
-  background: var(--accent-color);
-  padding: 5px 12px;
-  border-radius: 5px;
-  color: white;
-  border: none;
-  cursor: pointer;
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
 }
-.left-panel, .right-panel{
-    background: #fff;
-    padding: 28px;
-    border-radius: 18px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-    width: 90%;
+
+.page-title {
+  font-family: var(--font-secondary);
+  font-size: clamp(2.3rem, 6vw, 3.4rem);
+  color: #061b49;
+  text-align: center;
+  margin-bottom: 3.5rem;
 }
-.selected-labels{
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-top: 10px;
+
+/* ─── Layout ─── */
+.booking-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+
+  @media (min-width: 992px) {
+    grid-template-columns: 5fr 6fr;
+    gap: 3rem;
+  }
 }
 
 .card {
-  /* width: 1100px; */
-  /* background: #fff; */
-  padding: 28px;
-  border-radius: 18px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  /* box-shadow: 0 10px 40px rgba(0,0,0,0.08); */
+  background: white;
+  border-radius: 16px;
+  padding: 2.2rem;
+  box-shadow: 0 10px 35px rgba(6, 27, 73, 0.07);
 }
 
-/* titles */
-.title {
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 18px;
-  color: #061b49;
+.panel-title {
   font-family: var(--font-secondary);
+  font-size: 1.85rem;
+  color: #061b49;
+  margin-bottom: 1.8rem;
 }
 
-/* calendar */
+/* Calendar ──────────────────────────────── */
 .calendar-wrapper {
   background: #ffffff;
-  padding: 14px;
   border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
-  max-width: 520px;
+  padding: 1.4rem;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .calendar-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 1.4rem;
 }
 
-.month-title {
-  font-weight: 700;
-  font-size: 16px;
-  cursor: pointer;
+.month-year {
+  font-weight: 600;
+  font-size: 1.18rem;
   color: #061b49;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
 }
 
-.month-title:hover {
-  text-decoration: underline;
+.month-year:hover {
+  background: #f0f5ff;
 }
 
-/* month dropdown */
-.month-dropdown {
-  background: #fff;
-  border: 1px solid #d8dbe2;
+.nav-btn {
+  width: 38px;
+  height: 38px;
   border-radius: 10px;
-  max-height: 260px;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.nav-btn:hover {
+  background: #d4a017cc;
+}
+
+.month-dropdown {
+  position: absolute;
+  z-index: 10;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  max-height: 240px;
   overflow-y: auto;
-  margin-bottom: 10px;
+  width: 180px;
 }
 
 .month-option {
-  padding: 10px 12px;
+  padding: 10px 14px;
   cursor: pointer;
 }
 
 .month-option:hover {
-  background: rgba(55,81,255,0.08);
+  background: #f0f7ff;
 }
 
-.weekday-row {
+.weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  margin-bottom: 6px;
-}
-
-.weekday {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: #6b7280;
+  margin-bottom: 0.8rem;
 }
 
-/* days */
 .days-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 6px;
-  margin-bottom: 20px;
-}
-.clear-btn{
-  background: var(--accent-color);
-  padding: 8px 14px;
-  /* border: 2px solid var(--primary-color); */
-  border: none;
-  border-radius: 5px;
-  color: white;
-  margin-bottom: 10px;
 }
 
 .day-cell {
-  padding: 8px;
-  /* min-height: 46px; */
-  border-radius: 8px;
-  text-align: right;
-  cursor: pointer;
-  position: relative;
+  aspect-ratio: 1;
   display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  transition: 0.1s;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  transition: all 0.18s;
+  font-size: 0.98rem;
+  cursor: pointer;
 }
 
-.day-cell:hover:not(.disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(6,27,73,0.06);
+.day-cell:hover:not(.past):not(.reserved) {
+  background: #f0f7ff;
+  transform: scale(1.06);
 }
 
-/* disabled days */
-.disabled {
-  opacity: 0.4;
+.past, .reserved {
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
-.other-month {
-  opacity: 0.45;
+.reserved {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
-.day-number {
-  font-size: 13px;
-  padding: 6px 8px;
-}
-
-/* today */
-.is-today .day-number {
-  box-shadow: inset 0 0 0 1px rgba(3,102,214,0.12);
-}
-
-/* selection */
-.selected-start .day-number,
-.selected-end .day-number {
-  background: var(--primary-color);
-  border-radius: 5px;
-  color: white;
-  font-weight: 700;
+.selected-start, .selected-end {
+  background: var(--primary-color) !important;
+  color: white !important;
+  font-weight: bold;
+  box-shadow: 0 0 0 3px rgba(6,27,73,0.15);
 }
 
 .in-range {
-  background: rgba(55,81,255,0.06);
+  background: #eff6ff;
 }
 
-/* form */
-.form-group {
-  margin-bottom: 18px;
-
-}
-
-label { font-weight: 500; margin-bottom: 6px; }
-
-input, select, textarea {
-  padding-left: 5px;
+.day-number {
+  padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid #d8dbe2;
-  outline: none;
-  font-size: 14px;
-  width: 100%;
-  margin-top: 10px;
-height: 48px;
-}
-select{
-      height: 50px;
 }
 
-input:focus, textarea:focus, select:focus {
-  border-color: #3751ff;
-  box-shadow: 0 0 0 3px rgba(55,81,255,0.08);
-}
-
-textarea { height: 100px; resize: none; }
-
-.submit-btn {
-  background: #061b49;
-  color: #fff;
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  width: 100%;
-  border: none;
-  height: 50px;
-  font-size: var(--fs-base);
-}
-.reserved .day-number {
-  background: #f8d7da; /* light red */
-  color: #721c24;
-  cursor: not-allowed;
-  border-radius: 5px;
-  /* padding: px; */
-}
-
-
-.mt-20 { margin-top: 20px; }
 .calendar-legend {
   display: flex;
-  gap: 20px;
-  margin-top: 12px;
-  font-size: 13px;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin: 1.2rem 0;
+  font-size: 0.9rem;
+  color: #4b5563;
 }
 
 .legend-circle {
+  display: inline-block;
   width: 14px;
   height: 14px;
   border-radius: 50%;
+  border: 1px solid #d1d5db;
+}
+
+.legend-circle.reserved { background: #fee2e2; }
+.legend-circle.selected { background: var(--primary-color); }
+.legend-circle.range { background: #dbeafe; }
+
+.selection-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.clear-btn {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.selected-dates {
+  display: flex;
+  gap: 2rem;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+/* Form & Quick Info */
+.quick-info {
+  margin-top: 2.2rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.4rem;
+
+  @media (min-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #374151;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #3751ff;
+  box-shadow: 0 0 0 3px rgba(55,81,255,0.1);
+}
+
+.error-border {
+  border-color: #ef4444 !important;
+}
+
+.field-error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.4rem;
+}
+
+.price-display {
+  margin-top: 1.8rem;
+  padding: 1.2rem;
+  background: #f0f7ff;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.price-label {
+  font-size: 1.05rem;
+  color: #4b5563;
+}
+
+.price-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  display: block;
+  margin-top: 0.4rem;
+}
+
+.submit-btn {
+  width: 100%;
+  margin-top: 2rem;
+  padding: 1.15rem;
+  background: #061b49;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #0a255f;
+  transform: translateY(-2px);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Spinner (simple) */
+.spinner {
   display: inline-block;
-  border: 1px solid #ccc;
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
 }
 
-.legend-circle.reserved {
-  background: #f8d7da; /* same as your reserved color */
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.legend-circle.selected-start {
-  background: var(--primary-color); /* same as your start date */
+/* Responsive */
+@media (max-width: 991px) {
+  .booking-layout {
+    grid-template-columns: 1fr;
+  }
 }
-
-.legend-circle.selected-end {
-  background: var(--primary-color); /* same as your end date */
-}
-
-.legend-circle.in-range {
-  background: rgba(55,81,255,0.06); /* same as your in-range */
-}
-
 </style>
