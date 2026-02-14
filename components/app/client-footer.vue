@@ -1,18 +1,16 @@
 <template>
   <footer class="footer">
     <div class="footer-container">
-
-      <!-- Brand -->
-      <div class="footer-col">
+      <!-- Brand & Description -->
+      <div class="footer-col brand-col">
         <h3 class="footer-title">Elite Reception</h3>
         <p class="footer-text">
-          Premium venue for unforgettable events. From intimate gatherings to grand celebrations.
+          Premium venue for unforgettable events — from intimate gatherings to grand celebrations.
         </p>
-
         <div class="footer-socials">
-          <Icon icon="mdi:facebook" class="icon" />
-          <Icon icon="mdi:instagram" class="icon" />
-          <Icon icon="mdi:twitter" class="icon" />
+          <a href="#" aria-label="Facebook"><Icon icon="mdi:facebook" class="social-icon" /></a>
+          <a href="#" aria-label="Instagram"><Icon icon="mdi:instagram" class="social-icon" /></a>
+          <a href="#" aria-label="Twitter/X"><Icon icon="mdi:twitter" class="social-icon" /></a>
         </div>
       </div>
 
@@ -20,240 +18,265 @@
       <div class="footer-col">
         <h3 class="footer-title">Quick Links</h3>
         <ul class="footer-links">
-          <li><a href="#">About Us</a></li>
-          <li><a href="#">Services & Packages</a></li>
-          <li><a href="#">Gallery</a></li>
-          <li><a href="#">FAQ</a></li>
+          <li><NuxtLink to="/about">About Us</NuxtLink></li>
+          <li><NuxtLink to="/services">Services & Packages</NuxtLink></li>
+          <li><NuxtLink to="/gallery">Gallery</NuxtLink></li>
+          <li><NuxtLink to="/faq">FAQ</NuxtLink></li>
         </ul>
       </div>
 
-      <!-- Contact -->
+      <!-- Contact Info -->
       <div class="footer-col">
         <h3 class="footer-title">Contact</h3>
-
         <ul class="contact-list">
-
           <li>
             <Icon icon="mdi:map-marker" class="contact-icon" />
             <span>123 Elite Avenue, Downtown City, ST 12345</span>
           </li>
-
           <li>
             <Icon icon="mdi:phone" class="contact-icon" />
             <span>(555) 123-4567</span>
           </li>
-
           <li>
             <Icon icon="mdi:email" class="contact-icon" />
             <span>info@elitereception.com</span>
           </li>
-
         </ul>
       </div>
 
       <!-- Newsletter -->
-      <div class="footer-col">
+      <div class="footer-col newsletter-col">
         <h3 class="footer-title">Newsletter</h3>
-
         <p class="footer-text">
-          Subscribe for updates and special offers.
+          Subscribe for exclusive updates, venue news & special offers.
         </p>
-
-        <input
-          type="email"
-          placeholder="Your email"
-          class="newsletter-input"
-        />
-
-        <button class="newsletter-btn">Subscribe</button>
+        <form class="newsletter-form" @submit.prevent="handleSubscribe">
+          <input
+            type="email"
+            placeholder="Your email address"
+            class="newsletter-input"
+            required
+          />
+          <button type="submit" class="newsletter-btn">
+            Subscribe
+          </button>
+        </form>
       </div>
-
     </div>
 
     <!-- Bottom Bar -->
     <div class="footer-bottom">
-      © {{ currentYear }} Elite Reception & Conference Hall. All rights reserved.
-      <span class="policies">
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
-      </span>
+      <p>
+        © {{ currentYear }} Elite Reception & Conference Hall. All rights reserved.
+      </p>
+      <div class="policies">
+        <NuxtLink to="/privacy">Privacy Policy</NuxtLink>
+        <NuxtLink to="/terms">Terms of Service</NuxtLink>
+      </div>
     </div>
   </footer>
 </template>
 
 <script>
-
 export default {
-  name: "SiteFooter",
-
-
+  name: 'SiteFooter',
   data() {
     return {
       currentYear: new Date().getFullYear()
-    };
+    }
+  },
+  methods: {
+    handleSubscribe() {
+      // Add your newsletter subscription logic here (e.g. API call)
+      alert('Thank you for subscribing! (Demo)')
+    }
   }
 }
 </script>
 
-
 <style scoped>
 .footer {
-  background: var(--primary-color);
+  background: var(--primary-color); /* dark blue */
   color: white;
-  padding: 60px 40px 20px;
+  padding: clamp(4rem, 8vw, 6rem) 0 2rem;
 }
-
-/* .footer-col {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start !important;
-  text-align: left !important;
-} */
-
-.footer-links,
-.contact-list {
-  text-align: left !important;
-  padding-left: 0 !important;
-}
-.contact-list span{
-    margin-left: 10px;
-}
-
-.footer-links li,
-.contact-list li {
-  list-style: none;
-  margin-bottom: 10px;
-  text-align: left !important;
-}
-
 
 .footer-container {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 40px;
-  margin: auto;
-  padding: var(--section-padding);
-}
-/* FIX CONTACT ALIGNMENT */
-.contact-list {
-  width: 100%;
-  display: block !important;
-  text-align: left !important;
-  padding-left: 0 !important;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 2fr 1fr 1fr 1.3fr;
+  }
 }
 
-.contact-list li {
-  display: block !important;
-  text-align: left !important;
-  color: #cfd6e4;
-  margin-bottom: 12px;
+.footer-col {
+  text-align: left;
 }
-
 
 .footer-title {
-  color: var(--accent-color);
-  font-size: var(--fs-xl);
   font-family: var(--font-secondary);
-  margin-bottom: 18px;
+  font-size: clamp(1.4rem, 3vw, 1.65rem);
   font-weight: 700;
+  color: var(--accent-color); /* gold */
+  margin-bottom: 1.4rem;
 }
 
 .footer-text {
-  color: #cfd6e4;
-  font-size: var(--fs-base);
-  line-height: 1.6;
-  margin-bottom: 20px;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #d1d9e6;
+  margin-bottom: 1.5rem;
+  opacity: 0.95;
 }
 
-.footer-socials .icon {
-  font-size: 1.4rem;
-  margin-right: 15px;
-  cursor: pointer;
-  transition: 0.3s;
+/* Social Icons */
+.footer-socials {
+  display: flex;
+  gap: 1.2rem;
+  margin-top: 1.5rem;
 }
 
-.footer-socials .icon:hover {
-  transform: scale(1.15);
+.social-icon {
+  font-size: 1.6rem;
+  color: #d1d9e6;
+  transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+  color: var(--accent-color);
+  transform: scale(1.15) translateY(-2px);
+}
+
+/* Links */
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .footer-links li {
-  list-style: none;
-  margin-bottom: 10px;
+  margin-bottom: 0.9rem;
 }
 
-.footer-links a {
-  color: #cfd6e4;
+.footer-links a,
+.policies a {
+  color: #d1d9e6;
   text-decoration: none;
-  transition: 0.3s;
+  font-size: 1rem;
+  transition: all 0.25s ease;
 }
 
-.footer-links a:hover {
-  color: #ffffff;
+.footer-links a:hover,
+.policies a:hover {
+  color: white;
+  padding-left: 4px;
+}
+
+/* Contact */
+.contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .contact-list li {
-  list-style: none;
-  margin-bottom: 12px;
   display: flex;
-  gap: 10px;
   align-items: flex-start;
-  color: #cfd6e4;
+  gap: 0.9rem;
+  margin-bottom: 1.1rem;
+  font-size: 1rem;
+  color: #d1d9e6;
 }
 
 .contact-icon {
-  font-size: 1.2rem;
+  font-size: 1.35rem;
+  color: var(--accent-color);
   margin-top: 3px;
+}
+
+/* Newsletter */
+.newsletter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
 }
 
 .newsletter-input {
   width: 100%;
-  padding: 12px 15px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.08);
+  padding: 0.9rem 1.2rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.07);
   color: white;
-  margin-bottom: 12px;
-  outline: none;
+  font-size: 1rem;
 }
 
 .newsletter-input::placeholder {
-  color: #a9b4c7;
+  color: #a8b5cc;
+}
+
+.newsletter-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(212,160,23,0.15);
 }
 
 .newsletter-btn {
   width: 100%;
-  padding: 12px;
-  border-radius: 10px;
+  padding: 0.95rem;
   background: white;
-  color: #0A3A75;
+  color: var(--primary-color);
   border: none;
-  cursor: pointer;
-  font-size: 1rem;
+  border-radius: 12px;
   font-weight: 600;
-  transition: 0.3s;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .newsletter-btn:hover {
-  background: #eaeaea;
+  background: #f0f0f0;
+  transform: translateY(-2px);
 }
 
+/* Bottom Bar */
 .footer-bottom {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255,255,255,0.15);
   text-align: center;
-  padding-top: 25px;
-  margin-top: 40px;
-  border-top: 1px solid rgba(255,255,255,0.2);
-  color: #cfd6e4;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
+  color: #c3cee0;
 }
 
-.policies a {
-  color: #cfd6e4;
-  margin-left: 15px;
-  text-decoration: none;
+.footer-bottom p {
+  margin: 0 0 0.8rem;
 }
 
-.policies a:hover {
-  color: white;
+.policies {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .footer-container {
+    gap: 2.5rem;
+  }
+  
+  .newsletter-form {
+    flex-direction: column;
+  }
 }
 </style>
