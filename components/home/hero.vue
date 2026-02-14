@@ -1,23 +1,23 @@
 <template>
   <section class="hero">
     <div class="overlay"></div>
-
+    
     <div class="content">
       <h1 class="title">
         Where Moments Become
         <span class="highlight">Memories</span>
       </h1>
-
+      
       <p class="subtitle">
         Elite Reception & Conference Hall – Your premier destination for weddings,
-        corporate events, and celebrations
+        corporate events, and unforgettable celebrations
       </p>
-
+      
       <div class="buttons">
-        <button class="btn btn-dark">
+        <button class="btn btn-primary">
           Book Now
         </button>
-        <button class="btn btn-light">
+        <button class="btn btn-secondary">
           View Gallery
         </button>
       </div>
@@ -25,11 +25,17 @@
   </section>
 </template>
 
+<script>
+export default {
+  name: 'HeroSection'
+}
+</script>
+
 <style scoped>
 .hero {
   position: relative;
   width: 100%;
-  height: 80vh;
+  min-height: 85vh;          /* better than fixed vh on mobile */
   background-image: url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1900&q=80');
   background-size: cover;
   background-position: center;
@@ -40,87 +46,138 @@
   text-align: center;
 }
 
-/* Dark blue color overlay */
 .overlay {
   position: absolute;
   inset: 0;
-  background: rgba(6, 26, 64, 0.78);
-  backdrop-filter: brightness(0.9);
+  background: rgba(6, 26, 64, 0.78);     /* deep navy overlay */
+  backdrop-filter: brightness(0.92) saturate(0.95);
 }
 
-/* Content styling */
+/* Content */
 .content {
   position: relative;
-  max-width: 1800px;
-  padding: 20px;
-  animation: fadeInUp 1.2s ease forwards;
+  z-index: 2;
+  max-width: 1400px;
+  width: 100%;
+  padding: 2rem 1.5rem;
+  animation: fadeInUp 1.3s ease-out forwards;
 }
 
 .title {
   font-family: var(--font-secondary);
-  font-size: 5.2rem;
-  line-height: 1.2;
-  margin-bottom: 20px;
+  font-size: clamp(2.8rem, 8vw, 5.5rem);   /* fluid typography */
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 1.2rem;
   color: #ffffff;
+  letter-spacing: -0.02em;
 }
 
 .highlight {
-  color: var(--accent-color); /* golden yellow */
+  color: var(--accent-color);               /* golden yellow */
   display: block;
-    font-family: var(--font-secondary);
 }
 
 .subtitle {
   font-family: var(--font-primary);
-  font-size: 1.2rem;
-  color: #e8e8e8;
-  max-width: 750px;
-  margin: 0 auto 40px auto;
+  font-size: clamp(1.1rem, 3vw, 1.35rem);
+  line-height: 1.5;
+  color: #f0f0f0;
+  max-width: 720px;
+  margin: 0 auto 2.5rem auto;
+  opacity: 0.95;
 }
 
 /* Buttons */
 .buttons {
   display: flex;
-  gap: 0px;
+  flex-wrap: wrap;
+  gap: 1.2rem;
   justify-content: center;
-  width: 40%;
+  margin-top: 1rem;
 }
 
 .btn {
   font-family: var(--font-primary);
-  padding:18px 40px;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.9rem 2.2rem;
+  border-radius: 50px;                      /* softer modern pill shape */
   cursor: pointer;
+  transition: all 0.3s ease;
   border: none;
-}
-
-.btn-dark {
-  background: #001b4d;
-  color: #fff;
-  border: 2px solid white;
-}
-
-.btn-light {
-  background: #ffffff;
-  color: #06264e;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
 
 .btn:hover {
-  opacity: 0.85;
-  transition: 0.3s ease;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.22);
+  opacity: 0.97;
 }
 
+.btn-primary {
+  background: #001b4d;                      /* dark blue */
+  color: white;
+  border: 2px solid rgba(255,255,255,0.4);
+}
 
+.btn-secondary {
+  background: rgba(255,255,255,0.95);
+  color: #06264e;
+  border: 2px solid #06264e;
+}
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(35px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ──────────────────────────────────
+   RESPONSIVE BREAKPOINTS
+─────────────────────────────────── */
+@media (max-width: 1024px) {
   .title {
-    font-size: 2.6rem;
+    font-size: clamp(3.4rem, 9vw, 4.8rem);
   }
   .subtitle {
-    font-size: 1rem;
+    max-width: 90%;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    min-height: 80vh;
+  }
+  
+  .content {
+    padding: 1.5rem 1rem;
+  }
+  
+  .title {
+    font-size: clamp(2.4rem, 10vw, 3.6rem);
+  }
+  
+  .subtitle {
+    font-size: clamp(1rem, 4vw, 1.15rem);
+    margin-bottom: 2rem;
+  }
+  
+  .buttons {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .btn {
+    padding: 1rem 2.5rem;
+    width: 100%;
+    max-width: 320px;
   }
 }
 </style>
