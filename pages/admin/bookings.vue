@@ -1,4 +1,4 @@
-<!-- pages/admin/bookings.vue  or  components/BookingsTable.vue -->
+<!-- pages/admin/bookings.vue -->
 <template>
   <div class="bookings-page">
     <!-- Header -->
@@ -8,7 +8,8 @@
         <p>Manage all hall reservations</p>
       </div>
       <button class="btn-new">
-        <span>+</span> New Booking
+        <i class="fas fa-plus"></i>
+        New Booking
       </button>
     </div>
 
@@ -33,7 +34,7 @@
 
     <!-- Table Section -->
     <div class="table-container">
-      <h2 class="table-title">All Bookings (5)</h2>
+      <h2 class="table-title">All Bookings ({{ bookings.length }})</h2>
 
       <div class="table-wrapper">
         <table class="bookings-table">
@@ -69,9 +70,15 @@
                 </span>
               </td>
               <td class="actions-cell">
-                <button class="action-btn view">👁️</button>
-                <button class="action-btn edit">✏️</button>
-                <button class="action-btn delete">🗑️</button>
+                <button class="action-btn view" title="View details">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="action-btn edit" title="Edit booking">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn delete" title="Cancel / Delete">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -80,6 +87,12 @@
     </div>
   </div>
 </template>
+
+<script setup>
+definePageMeta({
+  layout: 'admin'
+})
+</script>
 
 <script>
 export default {
@@ -154,7 +167,7 @@ export default {
 
 <style scoped>
 .bookings-page {
-  padding: 24px;
+  /* padding: 24px; */
   background: #f8fafc;
   min-height: 100vh;
 }
@@ -172,12 +185,13 @@ export default {
   font-size: 2rem;
   font-weight: 700;
   color: #1f2937;
-  margin: 0;
+  margin: 0 0 4px 0;
 }
 
 .page-header p {
   color: #6b7280;
-  margin: 4px 0 0 0;
+  margin: 0;
+  font-size: 0.95rem;
 }
 
 .btn-new {
@@ -188,10 +202,11 @@ export default {
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-size: 1rem;
+  transition: background 0.2s;
   box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
 }
 
@@ -203,23 +218,48 @@ export default {
 .controls {
   display: flex;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   flex-wrap: wrap;
 }
 
 .search-wrapper {
   flex: 1;
   min-width: 280px;
+  position: relative;
 }
 
 .search-input {
   width: 100%;
-  padding: 12px 16px 12px 40px;
+  padding: 12px 16px 12px 44px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 1rem;
-  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 12px center;
-  background-size: 18px;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+/* Add magnifying glass via Font Awesome instead of background image */
+.search-wrapper::before {
+  content: "\f002";
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 1.1rem;
+  pointer-events: none;
 }
 
 .filter-wrapper {
@@ -234,6 +274,11 @@ export default {
   background: white;
   font-size: 1rem;
   cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 12px;
 }
 
 /* Table */
@@ -275,12 +320,12 @@ export default {
   font-weight: 600;
   color: #4b5563;
   text-transform: uppercase;
-  font-size: 0.85rem;
-  letter-spacing: 0.5px;
+  font-size: 0.82rem;
+  letter-spacing: 0.4px;
 }
 
 .customer-cell {
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .customer-name {
@@ -300,11 +345,12 @@ export default {
 
 .year {
   color: #6b7280;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
 .time-cell {
   white-space: nowrap;
+  color: #374151;
 }
 
 .amount-cell {
@@ -338,6 +384,7 @@ export default {
 
 .actions-cell {
   white-space: nowrap;
+  text-align: center;
 }
 
 .action-btn {
@@ -345,14 +392,16 @@ export default {
   border: none;
   font-size: 1.1rem;
   cursor: pointer;
-  padding: 6px;
-  margin: 0 4px;
+  padding: 6px 8px;
+  margin: 0 2px;
   color: #6b7280;
   border-radius: 6px;
+  transition: all 0.15s;
 }
 
 .action-btn:hover {
   background: #f1f5f9;
+  transform: translateY(-1px);
 }
 
 .action-btn.view   { color: #3b82f6; }
@@ -379,6 +428,11 @@ export default {
   
   .table-wrapper {
     overflow-x: auto;
+  }
+  
+  .bookings-table th,
+  .bookings-table td {
+    padding: 12px 14px;
   }
 }
 </style>
