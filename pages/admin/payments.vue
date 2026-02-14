@@ -1,83 +1,96 @@
-<!-- pages/admin/bookings.vue -->
+<!-- pages/admin/payments.vue -->
 <template>
-  <div class="bookings-page">
+  <div class="payments-page">
     <!-- Header -->
     <div class="page-header">
       <div>
-        <h1>Bookings</h1>
-        <p>Manage all hall reservations</p>
+        <h1>Payments</h1>
+        <p>Manage invoices and financial reports</p>
       </div>
-      <button class="btn-new">
-        <i class="fas fa-plus"></i>
-        New Booking
-      </button>
     </div>
 
-    <!-- Controls -->
-    <div class="controls">
-      <div class="search-wrapper">
-        <input
-          type="text"
-          placeholder="Search bookings..."
-          class="search-input"
-        />
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value">$5,600</div>
+        <div class="stat-icon purple">
+          <i class="fas fa-dollar-sign"></i>
+        </div>
       </div>
-      <div class="filter-wrapper">
-        <select class="filter-select">
-          <option>All Status</option>
-          <option>Confirmed</option>
-          <option>Pending</option>
-          <option>Cancelled</option>
-        </select>
+
+      <div class="stat-card">
+        <div class="stat-label">Paid</div>
+        <div class="stat-value">$3,500</div>
+        <div class="stat-icon green">
+          <i class="fas fa-chart-line"></i>
+        </div>
       </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value">$1,800</div>
+        <div class="stat-icon orange">
+          <i class="fas fa-file-invoice-dollar"></i>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Overdue</div>
+        <div class="stat-value">$300</div>
+        <div class="stat-icon red">
+          <i class="fas fa-exclamation-circle"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active">Invoices</button>
+      <button class="tab">Financial Reports</button>
     </div>
 
     <!-- Table Section -->
     <div class="table-container">
-      <h2 class="table-title">All Bookings ({{ bookings.length }})</h2>
+      <h2 class="table-title">All Invoices</h2>
+      <p class="table-subtitle">View and manage all payment invoices</p>
 
       <div class="table-wrapper">
-        <table class="bookings-table">
+        <table class="bookings-table">  <!-- reusing same table class -->
           <thead>
             <tr>
+              <th>Invoice #</th>
               <th>Customer</th>
               <th>Hall</th>
-              <th>Event Type</th>
-              <th>Date</th>
-              <th>Time</th>
               <th>Amount</th>
+              <th>Due Date</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="booking in bookings" :key="booking.id">
+            <tr v-for="invoice in invoices" :key="invoice.id">
+              <td class="invoice-num">{{ invoice.invoiceNumber }}</td>
               <td class="customer-cell">
-                <div class="customer-name">{{ booking.customer }}</div>
-                <div class="customer-email">{{ booking.email }}</div>
+                <div class="customer-name">{{ invoice.customer }}</div>
               </td>
-              <td>{{ booking.hall }}</td>
-              <td>{{ booking.eventType }}</td>
+              <td>{{ invoice.hall }}</td>
+              <td class="amount-cell">{{ invoice.amount }}</td>
               <td class="date-cell">
-                {{ booking.dateDay }}<br />
-                <span class="year">{{ booking.year }}</span>
+                {{ invoice.dueDate }}<br />
+                <span class="year">{{ invoice.year }}</span>
               </td>
-              <td class="time-cell">{{ booking.time }}</td>
-              <td class="amount-cell">{{ booking.amount }}</td>
               <td>
-                <span :class="['status-badge', booking.status]">
-                  {{ booking.status }}
+                <span :class="['status-badge', invoice.status]">
+                  {{ invoice.status }}
                 </span>
               </td>
               <td class="actions-cell">
-                <button class="action-btn view" title="View details">
+                <button class="action-btn view" title="View invoice">
                   <i class="fas fa-eye"></i>
                 </button>
-                <button class="action-btn edit" title="Edit booking">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="action-btn delete" title="Cancel / Delete">
-                  <i class="fas fa-trash-alt"></i>
+                <button class="action-btn print" title="Download / Print">
+                  <i class="fas fa-print"></i>
                 </button>
               </td>
             </tr>
@@ -98,66 +111,46 @@ definePageMeta({
 export default {
   data() {
     return {
-      bookings: [
+      invoices: [
         {
           id: 1,
+          invoiceNumber: 'INV-2026-001',
           customer: 'Sarah Johnson',
-          email: 'sarah@email.com',
           hall: 'Grand Ballroom',
-          eventType: 'Wedding Reception',
-          dateDay: 'Feb 15, 2026',
-          year: '2026',
-          time: '18:00 – 23:00',
           amount: '$2,500',
-          status: 'confirmed'
+          dueDate: 'Feb 10, 2026',
+          year: '2026',
+          status: 'paid'
         },
         {
           id: 2,
+          invoiceNumber: 'INV-2026-002',
           customer: 'Michael Chen',
-          email: 'mchen@corp.com',
           hall: 'Executive Conference Room',
-          eventType: 'Corporate Meeting',
-          dateDay: 'Feb 05, 2026',
-          year: '2026',
-          time: '09:00 – 17:00',
           amount: '$1,000',
-          status: 'confirmed'
+          dueDate: 'Feb 01, 2026',
+          year: '2026',
+          status: 'paid'
         },
         {
           id: 3,
+          invoiceNumber: 'INV-2026-003',
           customer: 'Emily Davis',
-          email: 'emily@email.com',
           hall: 'Garden Pavilion',
-          eventType: 'Birthday Party',
-          dateDay: 'Feb 20, 2026',
-          year: '2026',
-          time: '14:00 – 20:00',
           amount: '$1,800',
+          dueDate: 'Feb 15, 2026',
+          year: '2026',
           status: 'pending'
         },
         {
           id: 4,
+          invoiceNumber: 'INV-2026-004',
           customer: 'James Wilson',
-          email: 'jwilson@email.com',
           hall: 'Intimate Lounge',
-          eventType: 'Private Dinner',
-          dateDay: 'Feb 10, 2026',
-          year: '2026',
-          time: '19:00 – 22:00',
           amount: '$300',
-          status: 'confirmed'
-        },
-        {
-          id: 5,
-          customer: 'Lisa Anderson',
-          email: 'lisa@startup.io',
-          hall: 'Executive Conference Room',
-          eventType: 'Product Launch',
-          dateDay: 'Feb 08, 2026',
+          dueDate: 'Jan 25, 2026',
           year: '2026',
-          time: '10:00 – 16:00',
-          amount: '$900',
-          status: 'cancelled'
+          status: 'overdue'
         }
       ]
     }
@@ -166,6 +159,162 @@ export default {
 </script>
 
 <style scoped>
+/* ────────────────────────────────────────────────
+   Most styles reused from bookings page — only new/changed added
+   ──────────────────────────────────────────────── */
+
+.payments-page {
+  padding: 24px;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Stats Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-label {
+  color: #6b7280;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.stat-icon {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: white;
+}
+
+.stat-icon.purple { background: #7c3aed; }
+.stat-icon.green  { background: #10b981; }
+.stat-icon.orange { background: #f59e0b; }
+.stat-icon.red    { background: #ef4444; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tab {
+  padding: 12px 24px;
+  font-weight: 500;
+  color: #6b7280;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  color: #7c3aed;
+  border-bottom: 3px solid #7c3aed;
+  font-weight: 600;
+}
+
+.tab:hover:not(.active) {
+  color: #4b5563;
+}
+
+/* Table subtitle */
+.table-subtitle {
+  padding: 0 24px 16px;
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+/* Reused classes from bookings page */
+.page-header,
+.table-container,
+.table-title,
+.table-wrapper,
+.bookings-table,
+.status-badge,
+.actions-cell,
+.action-btn,
+.customer-cell,
+.customer-name,
+.amount-cell,
+.date-cell,
+.year {
+  /* all inherited from previous bookings page styles */
+}
+
+/* Status colors — extended for payments */
+.status-badge.paid {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.overdue {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Action button - print */
+.action-btn.print {
+  color: #059669;
+}
+
+.action-btn.print:hover {
+  background: #ecfdf5;
+}
+
+/* Responsive (same as bookings) */
+@media (max-width: 1024px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
 .bookings-page {
   /* padding: 24px; */
   background: #f8fafc;
