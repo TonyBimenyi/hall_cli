@@ -1,4 +1,4 @@
-<!-- layouts/admin.vue  (or default.vue / custom layout) -->
+<!-- layouts/admin.vue -->
 <template>
   <div class="layout">
     <!-- Sidebar -->
@@ -36,6 +36,26 @@
         <h1 class="page-title">
           {{ currentPageTitle }}
         </h1>
+
+        <!-- User profile section on the right -->
+        <div class="user-profile" @click="showProfileMenu = !showProfileMenu">
+          <div class="avatar-wrapper">
+            <div class="avatar">MN</div>
+            <div class="status-dot"></div>
+          </div>
+          <div class="user-info">
+            <span class="user-name"> Mike Niyonkuru <i class="fas fa-chevron-down"></i>
+</span>
+          </div>
+
+          <!-- Dropdown menu (appears on click/hover) -->
+          <div v-if="showProfileMenu" class="profile-dropdown">
+            <button class="dropdown-item logout" @click="logout">
+              <i class="fas fa-sign-out-alt"></i>
+              Logout
+            </button>
+          </div>
+        </div>
       </header>
 
       <main class="content">
@@ -58,6 +78,7 @@ export default {
     return {
       isCollapsed: false,
       isMobile: false,
+      showProfileMenu: false,
       navigation: [
         { title: 'Dashboard',   url: '/admin',          icon: 'fa-solid fa-house' },
         { title: 'Bookings',    url: '/admin/bookings', icon: 'fa-solid fa-calendar-days' },
@@ -67,49 +88,55 @@ export default {
       ]
     }
   },
-
   computed: {
     currentPageTitle() {
-      const item = this.navigation.find(i => 
+      const item = this.navigation.find(i =>
         this.$route.path === i.url || this.$route.path.startsWith(i.url + '/')
       )
       return item ? item.title : 'Dashboard'
     }
   },
-
   mounted() {
     if (process.client) {
       this.isMobile = window.innerWidth <= 992
-      // Auto collapse on small screens
       if (this.isMobile) {
         this.isCollapsed = true
       }
-
       window.addEventListener('resize', this.handleResize)
     }
-  },
 
+    // Close dropdown when clicking outside
+    document.addEventListener('click', this.handleOutsideClick)
+  },
   beforeDestroy() {
     if (process.client) {
       window.removeEventListener('resize', this.handleResize)
     }
+    document.removeEventListener('click', this.handleOutsideClick)
   },
-
   methods: {
     toggleSidebar() {
       this.isCollapsed = !this.isCollapsed
     },
-
     isActive(url) {
       return this.$route.path === url || this.$route.path.startsWith(url + '/')
     },
-
     handleResize() {
       this.isMobile = window.innerWidth <= 992
-      // On mobile → force collapsed when window becomes small
       if (this.isMobile && !this.isCollapsed) {
         this.isCollapsed = true
       }
+    },
+    handleOutsideClick(e) {
+      if (!this.$el.contains(e.target)) {
+        this.showProfileMenu = false
+      }
+    },
+    logout() {
+      // Add your logout logic here (e.g. clear token, redirect to login)
+      console.log('Logging out...')
+      this.$router.push('/login')
+      this.showProfileMenu = false
     }
   }
 }
@@ -239,7 +266,7 @@ export default {
   padding: 0 20px;
   gap: 16px;
   flex-shrink: 0;
-  width: 100%;
+  /* width: 100%; */
 }
 
 .menu-btn {
@@ -298,5 +325,128 @@ export default {
   .content {
     padding: 16px;
   }
+}
+
+/* ─── Header ─── */
+.header {
+  height: 64px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  flex-shrink: 0;
+  /* width: 100%; */
+  justify-content: space-between; /* important change */
+}
+
+/* User profile on right */
+.user-profile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.user-profile:hover {
+  background: #f1f5f9;
+}
+
+.avatar-wrapper {
+  position: relative;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #8b5cf6; /* nice purple color - you can change to random if you want dynamic */
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.status-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  background: #10b981;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1f2937;
+}
+
+/* Profile dropdown */
+.profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  min-width: 160px;
+  z-index: 200;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.dropdown-item:hover {
+  background: #f1f5f9;
+}
+
+.dropdown-item.logout {
+  color: #ef4444;
+}
+
+.dropdown-item.logout:hover {
+  background: #fee2e2;
+}
+
+/* Rest of your existing styles (main, content, mobile-overlay, responsive) remain unchanged */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #f5f6fa; }
+.content { flex: 1; padding: 24px; overflow-y: auto; }
+.mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 90; }
+
+@media (max-width: 992px) {
+  .sidebar { position: fixed; height: 100%; transform: translateX(0); transition: transform 0.35s ease; }
+  .sidebar.collapsed { transform: translateX(-100%); width: 260px; }
+  .main { margin-left: 0 !important; }
+  .content { padding: 16px; }
 }
 </style>
