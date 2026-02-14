@@ -164,7 +164,7 @@ export default {
    ──────────────────────────────────────────────── */
 
 .payments-page {
-  padding: 24px;
+  /* padding: 24px; */
   background: #f8fafc;
   min-height: 100vh;
 }
