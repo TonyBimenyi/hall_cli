@@ -1,7 +1,6 @@
 <!-- pages/admin/bookings.vue -->
 <template>
   <div class="bookings-page">
-
     <!-- Header -->
     <div class="page-header">
       <div>
@@ -20,13 +19,16 @@
           class="search-input"
         />
       </div>
-
       <div class="filter-wrapper">
         <select v-model="statusFilter" class="filter-select">
           <option value="">All Status</option>
-          <option value="confirmed">Confirmed</option>
           <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="partial">Partially Paid</option>
+          <option value="paid">Paid</option>
+          <option value="completed">Completed</option>
           <option value="cancelled">Cancelled</option>
+          <option value="refunded">Refunded</option>
         </select>
       </div>
     </div>
@@ -36,7 +38,6 @@
       <h2 class="table-title">
         All Bookings ({{ filteredBookings.length }})
       </h2>
-
       <div class="table-wrapper">
         <table class="bookings-table">
           <thead>
@@ -46,20 +47,18 @@
               <th>Event Type</th>
               <th>Date</th>
               <th>Amount</th>
+              <th>Paid / Remaining</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
-
           <tbody>
             <tr v-if="loading">
-              <td colspan="7">Loading bookings...</td>
+              <td colspan="8">Loading bookings...</td>
             </tr>
-
             <tr v-else-if="filteredBookings.length === 0">
-              <td colspan="7">No bookings found.</td>
+              <td colspan="8">No bookings found.</td>
             </tr>
-
             <tr v-for="booking in filteredBookings" :key="booking.id">
               <td class="customer-cell">
                 <div class="customer-name">
@@ -69,11 +68,8 @@
                   {{ booking.clients?.email }}
                 </div>
               </td>
-
               <td>{{ booking.halls?.name }}</td>
-
               <td>{{ booking.event_type }}</td>
-
               <td class="date-cell">
                 {{ formatDate(booking.date_start) }}
                 <br />
@@ -81,19 +77,25 @@
                   to {{ formatDate(booking.date_end) }}
                 </span>
               </td>
-
               <td class="amount-cell">
-                ${{ booking.total_cost }}
+                ${{ Number(booking.total_cost || 0).toLocaleString() }}
               </td>
-
+              <td class="paid-remaining-cell">
+                <div class="paid-amount">
+                  ${{ Number(booking.total_paid || 0).toLocaleString() }}
+                </div>
+                <div class="remaining-amount" v-if="booking.remaining_balance > 0">
+                  remaining: ${{ Number(booking.remaining_balance || 0).toLocaleString() }}
+                </div>
+                <div class="fully-paid" v-else>Fully Paid</div>
+              </td>
               <td>
                 <span :class="['status-badge', booking.status]">
-                  {{ booking.status }}
+                  {{ formatStatus(booking.status) }}
                 </span>
               </td>
-
               <td class="actions-cell">
-                                <button class="action-btn view" title="View details">
+                <button class="action-btn view" title="View details">
                   <i class="fas fa-eye"></i>
                 </button>
                 <button class="action-btn edit" title="Edit booking">
@@ -105,15 +107,28 @@
                 >
                   <i class="fas fa-trash-alt"></i>
                 </button>
-                
+                <button
+                  class="action-btn payment"
+                  @click="openPaymentModal(booking)"
+                  title="Add Payment"
+                >
+                  <i class="fas fa-dollar-sign"></i>
+                </button>
               </td>
             </tr>
-
           </tbody>
         </table>
       </div>
     </div>
 
+    <!-- Payment Modal -->
+    <PaymentModal
+      v-if="showPaymentModal"
+      :is-visible="showPaymentModal"
+      :booking="selectedBooking"
+      @close="closePaymentModal"
+      @payment-created="handlePaymentCreated"
+    />
   </div>
 </template>
 
@@ -125,14 +140,23 @@ definePageMeta({
 
 <script>
 import axios from "axios"
+import PaymentModal from "~/components/admin/payments/PaymentModal.vue"
+import { notify } from '~/composables/useNotification'   // ← ADDED
 
 export default {
+  components: {
+    PaymentModal
+  },
+
   data() {
     return {
       bookings: [],
       loading: false,
       search: "",
-      statusFilter: ""
+      statusFilter: "",
+
+      showPaymentModal: false,
+      selectedBooking: null
     }
   },
 
@@ -141,13 +165,11 @@ export default {
       return this.bookings.filter(b => {
         const matchesSearch =
           !this.search ||
-          b.user?.first_name?.toLowerCase().includes(this.search.toLowerCase()) ||
-          b.user?.last_name?.toLowerCase().includes(this.search.toLowerCase()) ||
-          b.user?.email?.toLowerCase().includes(this.search.toLowerCase())
-
+          b.clients?.first_name?.toLowerCase().includes(this.search.toLowerCase()) ||
+          b.clients?.last_name?.toLowerCase().includes(this.search.toLowerCase()) ||
+          b.clients?.email?.toLowerCase().includes(this.search.toLowerCase())
         const matchesStatus =
           !this.statusFilter || b.status === this.statusFilter
-
         return matchesSearch && matchesStatus
       })
     }
@@ -158,52 +180,41 @@ export default {
   },
 
   methods: {
-
     async fetchBookings() {
-  this.loading = true
-
-  try {
-    const token = localStorage.getItem("access_token")
-
-    if (!token) {
-      console.error("No token found")
-      this.loading = false
-      return
-    }
-
-    const res = await axios.get(
-      "http://localhost:8000/api/bookings/",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
+      this.loading = true
+      try {
+        const token = localStorage.getItem("access_token")
+        if (!token) {
+          console.error("No token found")
+          this.loading = false
+          return
         }
+        const res = await axios.get(
+          "http://localhost:8000/api/bookings/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+        console.log("Bookings response:", res.data)
+        if (res.data.results) {
+          this.bookings = res.data.results
+        } else {
+          this.bookings = res.data
+        }
+      } catch (err) {
+        console.error("Fetch error:", err.response || err)
+        notify('Failed to load bookings. Please try again.', 'danger')
+      } finally {
+        this.loading = false
       }
-    )
-
-    console.log("Bookings response:", res.data)
-
-    // If backend uses pagination
-    if (res.data.results) {
-      this.bookings = res.data.results
-    } else {
-      this.bookings = res.data
-    }
-
-  } catch (err) {
-    console.error("Fetch error:", err.response || err)
-
-  } finally {
-    this.loading = false
-  }
-},
-
+    },
 
     async deleteBooking(id) {
       if (!confirm("Are you sure you want to delete this booking?")) return
-
       try {
         const token = localStorage.getItem("access_token")
-
         await axios.delete(
           `http://localhost:8000/api/bookings/${id}/`,
           {
@@ -212,11 +223,11 @@ export default {
             }
           }
         )
-
         this.bookings = this.bookings.filter(b => b.id !== id)
-
+        notify('Booking deleted successfully', 'success')
       } catch (err) {
         console.error("Failed to delete booking", err)
+        notify('Failed to delete booking', 'danger')
       }
     },
 
@@ -227,11 +238,195 @@ export default {
         month: "short",
         day: "numeric"
       })
-    }
+    },
 
+    formatStatus(status) {
+      const map = {
+        pending: 'Pending',
+        confirmed: 'Confirmed',
+        partial: 'Partially Paid',
+        paid: 'Fully Paid',
+        completed: 'Completed',
+        cancelled: 'Cancelled',
+        refunded: 'Refunded'
+      }
+      return map[status] || status.charAt(0).toUpperCase() + status.slice(1)
+    },
+
+    openPaymentModal(booking) {
+      this.selectedBooking = booking
+      this.showPaymentModal = true
+    },
+
+    closePaymentModal() {
+      this.showPaymentModal = false
+      this.selectedBooking = null
+    },
+
+    handlePaymentCreated() {
+      console.log("[DEBUG] Payment created → refreshing bookings list")
+      notify('Payment recorded successfully!', 'success')   // ← ADDED
+      this.fetchBookings()
+      this.closePaymentModal()
+    }
   }
 }
 </script>
+
+<style scoped>
+/* Paid / Remaining column */
+.paid-remaining-cell {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.paid-amount {
+  font-weight: 600;
+  color: #166534;
+}
+
+.remaining-amount {
+  color: #92400e;
+  font-size: 0.85rem;
+}
+
+.fully-paid {
+  color: #059669;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Status badge styles */
+.status-badge.pending     { background: #fef3c7; color: #92400e; }
+.status-badge.confirmed   { background: #dbeafe; color: #1e40af; }
+.status-badge.partial     { background: #fef3c7; color: #92400e; }
+.status-badge.paid        { background: #dcfce7; color: #166534; }
+.status-badge.completed   { background: #e0f2fe; color: #0369a1; }
+.status-badge.cancelled   { background: #fee2e2; color: #991b1b; }
+.status-badge.refunded    { background: #f3e8ff; color: #7c3aed; }
+
+/* Payment button */
+.action-btn.payment {
+  color: #10b981;
+}
+
+.action-btn.payment:hover {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+/* Your other existing styles remain unchanged */
+</style>
+<style scoped>
+/* ──────────────────────────────────────────────── */
+/* Your existing styles - unchanged */
+
+/* Paid / Remaining column */
+.paid-remaining-cell {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.paid-amount {
+  font-weight: 600;
+  color: #166534; /* green */
+}
+
+.remaining-amount {
+  color: #92400e; /* orange */
+  font-size: 0.85rem;
+}
+
+.fully-paid {
+  color: #059669;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Status badge styles for all statuses (added missing ones) */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  display: inline-block;
+}
+
+.status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.confirmed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.partial {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.paid {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.completed {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.status-badge.cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-badge.refunded {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+/* Payment button */
+.action-btn.payment {
+  color: #10b981;
+}
+
+.action-btn.payment:hover {
+  background: #ecfdf5;
+  color: #059669;
+}
+</style>
+
+<style scoped>
+/* ──────────────────────────────────────────────── */
+/* Your existing styles - unchanged */
+
+.action-btn.payment {
+  color: #10b981;          /* green */
+}
+
+.action-btn.payment:hover {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+/* If you have duplicate <style scoped> blocks, keep only one */
+</style>
+<style scoped>
+/* KEEP ALL YOUR EXISTING CSS EXACTLY AS IT IS */
+
+/* Only minimal addition for the new payment button */
+.action-btn.payment {
+  color: #10b981;          /* green */
+}
+
+.action-btn.payment:hover {
+  background: #ecfdf5;
+  color: #059669;
+}
+</style>
 
 <style scoped>
 /* KEEP ALL YOUR EXISTING CSS EXACTLY AS IT IS */
