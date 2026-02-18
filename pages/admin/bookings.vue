@@ -1,16 +1,13 @@
 <!-- pages/admin/bookings.vue -->
 <template>
   <div class="bookings-page">
+
     <!-- Header -->
     <div class="page-header">
       <div>
         <h1>Bookings</h1>
         <p>Manage all hall reservations</p>
       </div>
-      <button class="btn-new">
-        <i class="fas fa-plus"></i>
-        New Booking
-      </button>
     </div>
 
     <!-- Controls -->
@@ -18,23 +15,27 @@
       <div class="search-wrapper">
         <input
           type="text"
+          v-model="search"
           placeholder="Search bookings..."
           class="search-input"
         />
       </div>
+
       <div class="filter-wrapper">
-        <select class="filter-select">
-          <option>All Status</option>
-          <option>Confirmed</option>
-          <option>Pending</option>
-          <option>Cancelled</option>
+        <select v-model="statusFilter" class="filter-select">
+          <option value="">All Status</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="pending">Pending</option>
+          <option value="cancelled">Cancelled</option>
         </select>
       </div>
     </div>
 
-    <!-- Table Section -->
+    <!-- Table -->
     <div class="table-container">
-      <h2 class="table-title">All Bookings ({{ bookings.length }})</h2>
+      <h2 class="table-title">
+        All Bookings ({{ filteredBookings.length }})
+      </h2>
 
       <div class="table-wrapper">
         <table class="bookings-table">
@@ -44,47 +45,75 @@
               <th>Hall</th>
               <th>Event Type</th>
               <th>Date</th>
-              <th>Time</th>
               <th>Amount</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
-            <tr v-for="booking in bookings" :key="booking.id">
+            <tr v-if="loading">
+              <td colspan="7">Loading bookings...</td>
+            </tr>
+
+            <tr v-else-if="filteredBookings.length === 0">
+              <td colspan="7">No bookings found.</td>
+            </tr>
+
+            <tr v-for="booking in filteredBookings" :key="booking.id">
               <td class="customer-cell">
-                <div class="customer-name">{{ booking.customer }}</div>
-                <div class="customer-email">{{ booking.email }}</div>
+                <div class="customer-name">
+                  {{ booking.clients?.first_name }} {{ booking.clients?.last_name }}
+                </div>
+                <div class="customer-email">
+                  {{ booking.clients?.email }}
+                </div>
               </td>
-              <td>{{ booking.hall }}</td>
-              <td>{{ booking.eventType }}</td>
+
+              <td>{{ booking.halls?.name }}</td>
+
+              <td>{{ booking.event_type }}</td>
+
               <td class="date-cell">
-                {{ booking.dateDay }}<br />
-                <span class="year">{{ booking.year }}</span>
+                {{ formatDate(booking.date_start) }}
+                <br />
+                <span class="year">
+                  to {{ formatDate(booking.date_end) }}
+                </span>
               </td>
-              <td class="time-cell">{{ booking.time }}</td>
-              <td class="amount-cell">{{ booking.amount }}</td>
+
+              <td class="amount-cell">
+                ${{ booking.total_cost }}
+              </td>
+
               <td>
                 <span :class="['status-badge', booking.status]">
                   {{ booking.status }}
                 </span>
               </td>
+
               <td class="actions-cell">
-                <button class="action-btn view" title="View details">
+                                <button class="action-btn view" title="View details">
                   <i class="fas fa-eye"></i>
                 </button>
                 <button class="action-btn edit" title="Edit booking">
                   <i class="fas fa-edit"></i>
                 </button>
-                <button class="action-btn delete" title="Cancel / Delete">
+                <button
+                  class="action-btn delete"
+                  @click="deleteBooking(booking.id)"
+                >
                   <i class="fas fa-trash-alt"></i>
                 </button>
+                
               </td>
             </tr>
+
           </tbody>
         </table>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -95,75 +124,119 @@ definePageMeta({
 </script>
 
 <script>
+import axios from "axios"
+
 export default {
   data() {
     return {
-      bookings: [
-        {
-          id: 1,
-          customer: 'Sarah Johnson',
-          email: 'sarah@email.com',
-          hall: 'Grand Ballroom',
-          eventType: 'Wedding Reception',
-          dateDay: 'Feb 15, 2026',
-          year: '2026',
-          time: '18:00 – 23:00',
-          amount: '$2,500',
-          status: 'confirmed'
-        },
-        {
-          id: 2,
-          customer: 'Michael Chen',
-          email: 'mchen@corp.com',
-          hall: 'Executive Conference Room',
-          eventType: 'Corporate Meeting',
-          dateDay: 'Feb 05, 2026',
-          year: '2026',
-          time: '09:00 – 17:00',
-          amount: '$1,000',
-          status: 'confirmed'
-        },
-        {
-          id: 3,
-          customer: 'Emily Davis',
-          email: 'emily@email.com',
-          hall: 'Garden Pavilion',
-          eventType: 'Birthday Party',
-          dateDay: 'Feb 20, 2026',
-          year: '2026',
-          time: '14:00 – 20:00',
-          amount: '$1,800',
-          status: 'pending'
-        },
-        {
-          id: 4,
-          customer: 'James Wilson',
-          email: 'jwilson@email.com',
-          hall: 'Intimate Lounge',
-          eventType: 'Private Dinner',
-          dateDay: 'Feb 10, 2026',
-          year: '2026',
-          time: '19:00 – 22:00',
-          amount: '$300',
-          status: 'confirmed'
-        },
-        {
-          id: 5,
-          customer: 'Lisa Anderson',
-          email: 'lisa@startup.io',
-          hall: 'Executive Conference Room',
-          eventType: 'Product Launch',
-          dateDay: 'Feb 08, 2026',
-          year: '2026',
-          time: '10:00 – 16:00',
-          amount: '$900',
-          status: 'cancelled'
-        }
-      ]
+      bookings: [],
+      loading: false,
+      search: "",
+      statusFilter: ""
     }
+  },
+
+  computed: {
+    filteredBookings() {
+      return this.bookings.filter(b => {
+        const matchesSearch =
+          !this.search ||
+          b.user?.first_name?.toLowerCase().includes(this.search.toLowerCase()) ||
+          b.user?.last_name?.toLowerCase().includes(this.search.toLowerCase()) ||
+          b.user?.email?.toLowerCase().includes(this.search.toLowerCase())
+
+        const matchesStatus =
+          !this.statusFilter || b.status === this.statusFilter
+
+        return matchesSearch && matchesStatus
+      })
+    }
+  },
+
+  mounted() {
+    this.fetchBookings()
+  },
+
+  methods: {
+
+    async fetchBookings() {
+  this.loading = true
+
+  try {
+    const token = localStorage.getItem("access_token")
+
+    if (!token) {
+      console.error("No token found")
+      this.loading = false
+      return
+    }
+
+    const res = await axios.get(
+      "http://localhost:8000/api/bookings/",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    )
+
+    console.log("Bookings response:", res.data)
+
+    // If backend uses pagination
+    if (res.data.results) {
+      this.bookings = res.data.results
+    } else {
+      this.bookings = res.data
+    }
+
+  } catch (err) {
+    console.error("Fetch error:", err.response || err)
+
+  } finally {
+    this.loading = false
+  }
+},
+
+
+    async deleteBooking(id) {
+      if (!confirm("Are you sure you want to delete this booking?")) return
+
+      try {
+        const token = localStorage.getItem("access_token")
+
+        await axios.delete(
+          `http://localhost:8000/api/bookings/${id}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+
+        this.bookings = this.bookings.filter(b => b.id !== id)
+
+      } catch (err) {
+        console.error("Failed to delete booking", err)
+      }
+    },
+
+    formatDate(dateStr) {
+      const d = new Date(dateStr)
+      return d.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      })
+    }
+
   }
 }
 </script>
+
+<style scoped>
+/* KEEP ALL YOUR EXISTING CSS EXACTLY AS IT IS */
+</style>
+
 
 <style scoped>
 .bookings-page {
@@ -435,4 +508,4 @@ export default {
     padding: 12px 14px;
   }
 }
-</style>
+</style> 
