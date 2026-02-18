@@ -13,7 +13,7 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Total Revenue</div>
-        <div class="stat-value">$5,600</div>
+        <div class="stat-value">${{ Number(totalRevenue).toLocaleString() }}</div>
         <div class="stat-icon purple">
           <i class="fas fa-dollar-sign"></i>
         </div>
@@ -21,7 +21,7 @@
 
       <div class="stat-card">
         <div class="stat-label">Paid</div>
-        <div class="stat-value">$3,500</div>
+        <div class="stat-value">${{ Number(paidAmount).toLocaleString() }}</div>
         <div class="stat-icon green">
           <i class="fas fa-chart-line"></i>
         </div>
@@ -29,7 +29,7 @@
 
       <div class="stat-card">
         <div class="stat-label">Pending</div>
-        <div class="stat-value">$1,800</div>
+        <div class="stat-value">${{ Number(pendingAmount).toLocaleString() }}</div>
         <div class="stat-icon orange">
           <i class="fas fa-file-invoice-dollar"></i>
         </div>
@@ -37,14 +37,14 @@
 
       <div class="stat-card">
         <div class="stat-label">Overdue</div>
-        <div class="stat-value">$300</div>
+        <div class="stat-value">${{ Number(overdueAmount).toLocaleString() }}</div>
         <div class="stat-icon red">
           <i class="fas fa-exclamation-circle"></i>
         </div>
       </div>
     </div>
 
-    <!-- Tabs -->
+    <!-- Tabs (can be extended later) -->
     <div class="tabs">
       <button class="tab active">Invoices</button>
       <button class="tab">Financial Reports</button>
@@ -52,41 +52,46 @@
 
     <!-- Table Section -->
     <div class="table-container">
-      <h2 class="table-title">All Invoices</h2>
+      <h2 class="table-title">All Invoices ({{ payments.length }})</h2>
       <p class="table-subtitle">View and manage all payment invoices</p>
 
-      <div class="table-wrapper">
-        <table class="bookings-table">  <!-- reusing same table class -->
+      <div v-if="loading" class="loading">Loading payments...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else-if="payments.length === 0" class="empty-state">No payments found.</div>
+      <div v-else class="table-wrapper">
+        <table class="bookings-table">
           <thead>
             <tr>
-              <th>Invoice #</th>
+              <th>Payment ID</th>
               <th>Customer</th>
               <th>Hall</th>
               <th>Amount</th>
-              <th>Due Date</th>
+              <th>Payment Date</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="invoice in invoices" :key="invoice.id">
-              <td class="invoice-num">{{ invoice.invoiceNumber }}</td>
+            <tr v-for="payment in payments" :key="payment.id">
+              <td class="invoice-num">PAY-{{ payment.id.toString().padStart(4, '0') }}</td>
               <td class="customer-cell">
-                <div class="customer-name">{{ invoice.customer }}</div>
+                <div class="customer-name">
+                  {{ payment.booking_info?.client?.username || 'Unknown' }}
+                </div>
               </td>
-              <td>{{ invoice.hall }}</td>
-              <td class="amount-cell">{{ invoice.amount }}</td>
+              <td>{{ payment.booking_info?.hall?.name || '—' }}</td>
+              <td class="amount-cell">${{ Number(payment.amount).toLocaleString() }}</td>
               <td class="date-cell">
-                {{ invoice.dueDate }}<br />
-                <span class="year">{{ invoice.year }}</span>
+                {{ formatDate(payment.payment_date) }}<br />
+                <span class="year">{{ new Date(payment.payment_date).getFullYear() }}</span>
               </td>
               <td>
-                <span :class="['status-badge', invoice.status]">
-                  {{ invoice.status }}
+                <span :class="['status-badge', payment.status]">
+                  {{ formatStatus(payment.status) }}
                 </span>
               </td>
               <td class="actions-cell">
-                <button class="action-btn view" title="View invoice">
+                <button class="action-btn view" title="View details">
                   <i class="fas fa-eye"></i>
                 </button>
                 <button class="action-btn print" title="Download / Print">
@@ -98,6 +103,9 @@
         </table>
       </div>
     </div>
+
+    <!-- Notification component (assuming global or layout level) -->
+    <Notification />
   </div>
 </template>
 
@@ -108,55 +116,197 @@ definePageMeta({
 </script>
 
 <script>
+import axios from 'axios'
+import { notify } from '~/composables/useNotification'
+
 export default {
   data() {
     return {
-      invoices: [
-        {
-          id: 1,
-          invoiceNumber: 'INV-2026-001',
-          customer: 'Sarah Johnson',
-          hall: 'Grand Ballroom',
-          amount: '$2,500',
-          dueDate: 'Feb 10, 2026',
-          year: '2026',
-          status: 'paid'
-        },
-        {
-          id: 2,
-          invoiceNumber: 'INV-2026-002',
-          customer: 'Michael Chen',
-          hall: 'Executive Conference Room',
-          amount: '$1,000',
-          dueDate: 'Feb 01, 2026',
-          year: '2026',
-          status: 'paid'
-        },
-        {
-          id: 3,
-          invoiceNumber: 'INV-2026-003',
-          customer: 'Emily Davis',
-          hall: 'Garden Pavilion',
-          amount: '$1,800',
-          dueDate: 'Feb 15, 2026',
-          year: '2026',
-          status: 'pending'
-        },
-        {
-          id: 4,
-          invoiceNumber: 'INV-2026-004',
-          customer: 'James Wilson',
-          hall: 'Intimate Lounge',
-          amount: '$300',
-          dueDate: 'Jan 25, 2026',
-          year: '2026',
-          status: 'overdue'
+      payments: [],
+      loading: false,
+      error: null,
+
+      // Computed stats
+      totalRevenue: 0,
+      paidAmount: 0,
+      pendingAmount: 0,
+      overdueAmount: 0
+    }
+  },
+
+  computed: {
+    // You can add more filters later if needed
+  },
+
+  mounted() {
+    this.fetchPayments()
+  },
+
+  methods: {
+    async fetchPayments() {
+      this.loading = true
+      this.error = null
+
+      try {
+        const token = localStorage.getItem('access_token')
+        if (!token) {
+          throw new Error('No authentication token found')
         }
-      ]
+
+        const res = await axios.get('http://localhost:8000/api/payments/', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+
+        this.payments = res.data.results || res.data
+
+        // Calculate stats
+        this.calculateStats()
+      } catch (err) {
+        console.error('Failed to fetch payments:', err)
+        this.error = 'Failed to load payments. Please try again.'
+        notify(this.error, 'danger')
+      } finally {
+        this.loading = false
+      }
+    },
+
+    calculateStats() {
+      let total = 0
+      let paid = 0
+      let pending = 0
+      let overdue = 0
+
+      this.payments.forEach(p => {
+        const amount = Number(p.amount || 0)
+        total += amount
+
+        if (p.status === 'paid') {
+          paid += amount
+        } else if (p.status === 'pending') {
+          pending += amount
+          // Optional: check if payment_date is past due
+          // if (new Date(p.payment_date) < new Date()) overdue += amount
+        }
+      })
+
+      this.totalRevenue = total.toFixed(2)
+      this.paidAmount = paid.toFixed(2)
+      this.pendingAmount = pending.toFixed(2)
+      this.overdueAmount = overdue.toFixed(2) // currently 0; add logic if needed
+    },
+
+    formatDate(dateStr) {
+      if (!dateStr) return '—'
+      const d = new Date(dateStr)
+      return d.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    },
+
+    formatStatus(status) {
+      const map = {
+        pending: 'Pending',
+        paid: 'Paid',
+        refunded: 'Refunded'
+      }
+      return map[status] || status.charAt(0).toUpperCase() + status.slice(1)
     }
   }
 }
 </script>
+
+<style scoped>
+/* ──────────────────────────────────────────────── */
+/* Your existing styles - unchanged + minor additions */
+
+.payments-page {
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Loading & Error states */
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.error-message {
+  text-align: center;
+  padding: 40px;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+/* Stats Cards (unchanged) */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Table (reused classes) */
+.bookings-table th,
+.bookings-table td {
+  padding: 16px 20px;
+}
+
+.invoice-num {
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Status badges - extended for payments */
+.status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.paid {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.refunded {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+/* Action buttons */
+.action-btn.print {
+  color: #059669;
+}
+
+.action-btn.print:hover {
+  background: #ecfdf5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
 
 <style scoped>
 /* ────────────────────────────────────────────────
